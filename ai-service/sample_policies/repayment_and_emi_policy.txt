@@ -1,0 +1,37 @@
+BANKCORE360 LOAN REPAYMENT & AMORTIZATION POLICY
+Document ID: POL-REP-2026-V1
+Category: Repayment and EMI Policy
+Version: 1.0
+Effective Date: 2026-01-01
+Status: ACTIVE
+
+1. EMI CALCULATION FORMULATION
+Equal Monthly Installments (EMI) across all BankCore360 retail and commercial loans are computed using the standard mathematical formula:
+E = P * r * (1 + r)^n / ((1 + r)^n - 1)
+Where:
+- E = Monthly Equal Installment amount (rounded to nearest Rupee).
+- P = Principal Loan Sanction Amount.
+- r = Monthly Interest Rate, defined as Annual Interest Rate / 1200.
+- n = Total Tenure expressed in months.
+
+2. REPAYMENT SCHEDULE GENERATION
+Upon loan disbursement authorization by the Branch Manager:
+- The core banking system generates an immutable, complete monthly repayment schedule for the entire tenure.
+- Each schedule entry tracks: Installment Number, Due Date (typically the 5th or 10th of each calendar month), Total EMI Due, Principal Component, Interest Component, and Outstanding Closing Principal Balance.
+- Installment payments are applied first towards accrued interest and penal fees, with the residue applied to extinguish principal balance.
+
+3. REPAYMENT MODES AND AUTOMATION
+- Primary Mode: Electronic Clearing Service (NACH / e-Mandate) auto-debit linked to the customer's registered bank account.
+- Alternate Channels: Immediate Payment Service (IMPS), National Electronic Funds Transfer (NEFT), UPI, or online payment portal.
+- Standing Instructions: Customer must ensure adequate balance in their designated repayment account at least 24 hours prior to the scheduled monthly debit date.
+
+4. PART-PREPAYMENT AND FULL CLOSURE
+- Borrowers may make partial principal prepayments at any time to either lower future monthly EMIs or compress remaining tenure.
+- Floating rate retail loans carry zero foreclosure or prepayment penalty.
+- Fixed rate commercial facilities carry a prepayment compensation charge of 2.0% on prepaid principal if closed within 12 months of sanction.
+
+5. DELINQUENCY AND DEFAULT MANAGEMENT
+- Day 1 to 30 past due: Grace period with SMS and email reminders.
+- Day 31 to 60 past due: Account flagged as Special Mention Account (SMA-1). Formal demand notice issued.
+- Day 90 past due: Account classified as Non-Performing Asset (NPA) requiring formal legal recovery proceedings.
+

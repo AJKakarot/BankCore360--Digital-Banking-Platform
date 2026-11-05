@@ -1,0 +1,34 @@
+BANKCORE360 CUSTOMER IDENTIFICATION & DOCUMENTATION POLICY
+Document ID: POL-KYC-2026-V1
+Category: KYC and Document Policy
+Version: 1.0
+Effective Date: 2026-01-01
+Status: ACTIVE
+
+1. MANDATORY POLICY DIRECTIVE
+Under BankCore360 dual control principles, every retail or commercial loan application must have all supporting identity and financial documents scrutinized, authenticated, and verified by a designated Checker before any file is forwarded to the Credit Manager for final sanction.
+
+2. ACCEPTABLE IDENTIFICATION PROOFS (OFFICIALLY VALID DOCUMENTS - OVD)
+- Primary Identity Proof: Test PAN Card (mandatory for all income-generating borrowers to confirm tax identification).
+- Secondary Identity / Address Proof: Test Aadhaar Card (with masked first 8 digits), Voter Identity Card, Driving License, or Valid Passport.
+- Utility Bills: Electricity, piped gas, or landline bills issued within the preceding 90 days are acceptable address verifications for residential addresses.
+- Strict Prohibition: Uploading real identification numbers or unredacted government credentials in the educational sandbox is strictly prohibited. Synthetic dummy test files must be used.
+
+3. FINANCIAL AND INCOME DOCUMENT STANDARDS
+- Salaried Borrowers: Last 3 calendar months computer-generated salary pay-slips displaying company name, employee ID, Gross Pay, Deductions, and Net Pay. Alternatively, latest Form 16 or verified ITR-V acknowledgment.
+- Bank Statements: 6 months continuous operative savings or salary account statement in non-editable PDF format. Must clearly show regular monthly salary credit entries matching the submitted payslips.
+- Self-Employed Borrowers: Latest 2 years computation of total income, audited P&L and Balance Sheet, accompanied by 6 months bank statements.
+
+4. UPLOAD SPECIFICATIONS AND TECHNICAL RULES
+- Supported File Extensions: PDF, JPEG, PNG only. Executable formats (EXE, SH, BAT), scripts, macro-enabled spreadsheets, or encrypted/password-protected PDFs are rejected immediately upon upload.
+- File Size Constraints: Minimum 10 KB; Maximum 5 MB per document.
+- Image Quality: Must be legible with all edges visible. Document text must not be blurred or cropped.
+
+5. GROUNDS FOR DOCUMENT REJECTION BY CHECKER
+A document will be formally rejected by the Checker with a mandatory audit reason if:
+1. The applicant name on the document does not match the registered Customer name.
+2. The document is expired, illegible, obscured, or cropped.
+3. Salary slip does not demonstrate net monthly salary meeting the ₹15,000 threshold.
+4. Bank statement demonstrates continuous cheque bounces, negative balance events, or undisclosed existing loans.
+5. Suspected digital tampering or mismatched font weights across numeric values.
+

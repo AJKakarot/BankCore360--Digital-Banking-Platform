@@ -1,0 +1,36 @@
+BANKCORE360 PRICING & INTEREST RATE DETERMINATION POLICY
+Document ID: POL-IR-2026-V1
+Category: Interest Rate Policy
+Version: 1.0
+Effective Date: 2026-01-01
+Status: ACTIVE
+
+1. PRICING PRINCIPLES
+BankCore360 computes interest using the Monthly Reducing Balance Method. Under this standard banking formula, interest is assessed solely on the outstanding unpaid principal balance remaining at the start of each monthly cycle, rather than on the original sanction amount.
+
+2. PRODUCT INTEREST RATE BANDS (ANNUAL PERCENTAGE RATE)
+- Personal Loans (Unsecured):
+  * Excellent Credit (Score 750+): 10.50% - 11.75% p.a.
+  * Good Credit (Score 700 - 749): 11.76% - 13.00% p.a.
+  * Fair Credit (Score 650 - 699): 13.01% - 14.50% p.a.
+- Home Loans (Secured Residential):
+  * Salaried Borrowers: 8.50% - 9.25% p.a.
+  * Self-Employed Borrowers: 8.75% - 9.75% p.a.
+- Education Loans:
+  * Premier Tier-1 Institutes: 9.00% - 9.75% p.a.
+  * Other Accredited Institutions: 9.76% - 11.25% p.a.
+  * 0.50% interest concession applies to female student applicants.
+- Business Loans (MSME & Commercial):
+  * Secured Facilities: 11.00% - 13.50% p.a.
+  * Unsecured Working Capital: 13.51% - 15.50% p.a.
+
+3. REDUCING BALANCE VS FLAT RATE COMPARISON
+Borrowers are informed that a 'flat rate' quote of 7% actually equates to an effective reducing-balance APR of approximately 13.00%. BankCore360 never quotes deceptive flat rates. In our reducing balance schedule, every monthly EMI payment contains:
+1. Principal Component: directly reduces the outstanding debt.
+2. Interest Component: monthly rate applied strictly to the remaining debt balance.
+In the initial installments, interest comprises a larger portion of the EMI. In later installments, the principal component dominates until the loan is fully extinguished.
+
+4. RATE REVISION AND PENAL INTEREST
+- Floating rate facilities are reviewed quarterly against benchmark policy rate shifts.
+- Late Payment Penalty: In the event of default on the monthly EMI due date, a penal interest surcharge of 2.0% per month on the overdue EMI amount will be assessed until overdue amounts are settled.
+

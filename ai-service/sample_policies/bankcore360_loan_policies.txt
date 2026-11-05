@@ -1,0 +1,88 @@
+BANKCORE360 OFFICIAL APPROVED LOAN POLICIES MASTER DIRECTIVE
+Effective Date: 2026-01-01 | Status: ACTIVE
+
+1. PERSONAL LOAN PRODUCT POLICY
+Policy ID: POL-PL-2026-V1
+Category: Personal Loan Policy
+- Product Overview: Unsecured multi-purpose credit facility for medical emergencies, home renovation, and personal expenses.
+- Eligibility Parameters: Minimum age 21 at application; maximum age 60 at maturity. Minimum net monthly take-home salary of ₹15,000 for Tier-2/3 cities and ₹20,000 for Metro locations. Minimum 1 year continuous employment.
+- Debt-to-Income Boundary: Maximum allowable Fixed Obligation to Income Ratio (FOIR) is strictly 50%.
+- Loan Limits: Minimum loan amount ₹25,000; Maximum loan amount ₹10,00,000 (capped at 10x net monthly salary).
+- Tenure Range: Minimum 6 months; Maximum 60 months (5 years).
+- Interest Rate: Indicative rate band 10.50% to 14.50% per annum on reducing balance.
+- Mandatory Documents: Test PAN card, Test Aadhaar card / address proof, last 3 months salary slips, and 6 months bank statement showing regular salary credits.
+
+2. HOME LOAN PRODUCT POLICY
+Policy ID: POL-HL-2026-V1
+Category: Home Loan Policy
+- Product Overview: Secured mortgage financing for residential property acquisition, home construction, and structural renovation.
+- Eligibility Parameters: Minimum age 23; maximum age 65 at loan maturity. Minimum household net monthly income of ₹35,000.
+- Loan Limits: Minimum ₹5,00,000; Maximum ₹1,50,00,000.
+- Tenure Range: Minimum 12 months; Maximum 360 months (30 years).
+- Interest Rate: Standard floating rate between 8.50% and 9.75% per annum.
+- LTV Ratios: Up to ₹30 Lakhs (90% LTV); ₹30L to ₹75L (80% LTV); Above ₹75L (75% LTV).
+- Mandatory Documents: Test PAN and Aadhaar for all co-borrowers, 3 months payslips, 6 months bank statement, Form 16, Sale Deed, and Non-Encumbrance Certificate.
+
+3. EDUCATION LOAN PRODUCT POLICY
+Policy ID: POL-ED-2026-V1
+Category: Education Loan Policy
+- Product Overview: Financing for meritorious students securing confirmed admission to recognized undergraduate and postgraduate degree programs.
+- Eligibility Parameters: Indian citizenship with confirmed merit admission. Mandatory parent/guardian co-borrower with minimum net monthly income of ₹25,000.
+- Financing Limits: Domestic studies up to ₹15,00,000; Overseas studies up to ₹30,00,000.
+- Margin: Up to ₹4 Lakhs (0% margin); Above ₹4 Lakhs Domestic (5%); Overseas (15%).
+- Moratorium: Course duration plus 6 months repayment holiday.
+- Maximum Tenure: Up to 120 months (10 years) following the moratorium.
+- Interest Rate: 9.00% to 11.25% per annum with 0.50% special concession for female students.
+- Mandatory Documents: Confirmed Admission Offer Letter and fee structure, 10th/12th/degree mark sheets, co-borrower test PAN and Aadhaar, and 3 months salary slips.
+
+4. BUSINESS LOAN PRODUCT POLICY
+Policy ID: POL-BL-2026-V1
+Category: Business Loan Policy
+- Product Overview: Commercial working capital and term facilities for MSMEs, sole proprietorships, partnerships, and private limited companies.
+- Enterprise Eligibility: Minimum 3 continuous financial years in same commercial activity. Minimum audited annual gross turnover of ₹25,00,000. Minimum DSCR of 1.35x.
+- Loan Limits: Minimum ₹1,00,000; Maximum unsecured ₹50,00,000; Secured up to ₹2,00,00,000.
+- Tenure: 12 months to 84 months (7 years).
+- Interest Rate: 11.00% to 15.50% per annum based on business credit rating.
+- Mandatory Documents: GST registration, 2 years audited Balance Sheet and P&L statements, 12 months operative current account bank statements, enterprise test PAN and director test KYC.
+
+5. CREDIT UNDERWRITING & LOAN ELIGIBILITY POLICY
+Policy ID: POL-ELIG-2026-V1
+Category: Loan Eligibility Policy
+- Core Philosophy: Prudent risk underwriting to protect borrowers against over-leverage while ensuring structured access to credit.
+- Minimum Income Rule: Salaried minimum verifiable net take-home salary is ₹15,000 per month.
+- Maximum FOIR Rule: The Fixed Obligation to Income Ratio (FOIR) must not exceed 50.0%:
+  FOIR = ((Total Existing Monthly EMIs + Proposed Loan EMI) / Net Monthly Income) * 100.
+  Applications exceeding 50% FOIR will be rejected automatically unless tenure is extended or amount reduced.
+- Bureau Benchmark: Minimum preferred credit score is 650.
+- Dual Control Rule: An AI Assistant cannot approve loans. Final approval requires Checker document verification and Manager credit sanction.
+
+6. CUSTOMER IDENTIFICATION & DOCUMENT VERIFICATION POLICY
+Policy ID: POL-KYC-2026-V1
+Category: KYC and Document Policy
+- Dual Control Directive: Every loan application must have supporting identity and financial documents authenticated and verified by a designated Checker before being forwarded to the Credit Manager.
+- Accepted Dummy Test Documents: Test PAN Card (mandatory for identity & tax record), Test Aadhaar Card (address verification), last 3 months salary slips (income proof), and 6 months operative bank statements.
+- Strict Prohibition: Uploading real identification credentials or unmasked national IDs is prohibited. Test files only.
+- Checker Verification Workflow: Checker inspects file quality, name consistency, and minimum ₹15,000 income proof.
+- Document Rejection: If verification fails, Checker must provide an audit rejection reason. Status remains pending or rejected until corrected.
+- Manager Forwarding: Once all documents are verified, status transitions to DOCUMENTS_VERIFIED and then PENDING_MANAGER_APPROVAL.
+
+7. REPAYMENT & REDUCING BALANCE EMI POLICY
+Policy ID: POL-REPAY-2026-V1
+Category: Repayment and EMI Policy
+- Standard Amortization: BankCore360 strictly uses the monthly reducing balance formula:
+  EMI = [P * r * (1 + r)^n] / [(1 + r)^n - 1]
+  where P is loan principal, r is monthly interest rate, and n is tenure in months.
+- Interest Assessment: Interest is charged each month only on the remaining unpaid principal balance, not the original sanction quantum.
+- Schedule: Every loan approval auto-generates a month-by-month repayment schedule tracking principal, interest, and outstanding balance.
+
+8. INTEREST RATE & PRICING POLICY
+Policy ID: POL-RATE-2026-V1
+Category: Interest Rate Policy
+- Pricing Philosophy: Risk-based pricing pegged to loan category, collateral, and applicant credit score.
+- Retail Product Rate Bands:
+  * Home Loans: 8.50% - 9.75% per annum.
+  * Education Loans: 9.00% - 11.25% per annum.
+  * Personal Loans: 10.50% - 14.50% per annum.
+  * Business Loans: 11.00% - 15.50% per annum.
+- Manager Discretion: Authorized Branch Credit Managers may adjust interest rates within approved policy bands based on credit score and debt-to-income profile.
+

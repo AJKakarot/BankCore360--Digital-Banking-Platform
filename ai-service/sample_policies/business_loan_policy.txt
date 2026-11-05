@@ -1,0 +1,35 @@
+BANKCORE360 COMMERCIAL & MSME LENDING POLICY: BUSINESS LOANS
+Document ID: POL-BL-2026-V1
+Category: Business Loan Policy
+Version: 1.0
+Effective Date: 2026-01-01
+Status: ACTIVE
+
+1. PRODUCT OVERVIEW
+The BankCore360 Business Loan offers working capital financing, plant and machinery acquisition, inventory build-up, and commercial operational expansion for Micro, Small, and Medium Enterprises (MSMEs), sole proprietorships, partnerships, and private limited entities.
+
+2. ENTERPRISE ELIGIBILITY NORMS
+- Business Vintage: Minimum 3 continuous financial years in the same line of commercial activity.
+- Minimum Annual Turnover: ₹25,00,000 audited gross turnover.
+- Business Financial Health: Entity must report positive net profit (PAT) and positive tangible net worth for the preceding 2 consecutive years.
+- Minimum Debt Service Coverage Ratio (DSCR): 1.35x.
+- Promoter Age: Minimum 24 years; Maximum 65 years.
+
+3. LOAN QUANTUM AND STRUCTURE
+- Minimum Loan Limit: ₹1,00,000.
+- Maximum Unsecured Business Loan: ₹50,00,000.
+- Maximum Secured Commercial Term Facility: ₹2,00,00,000 against industrial or commercial real estate collateral.
+- Tenure: 12 months to 84 months (7 years).
+
+4. INTEREST MATRIX AND CHARGES
+- Interest Rates: 11.00% to 15.50% per annum depending on business credit risk rating and audited balance sheet strength.
+- Processing Fee: 1.50% of the sanctioned credit facility.
+- Annual Renewal / Facility Inspection Fee: 0.25% of sanctioned working capital limit.
+
+5. STATUTORY & FINANCIAL DOCUMENTATION
+- Business Registration: GST Registration Certificate, Shop & Establishment license, or Udyam MSME Registration.
+- Entity Constitutional Documents: Partnership Deed, Certificate of Incorporation, Memorandum and Articles of Association (MOA/AOA).
+- Audited Financial Statements: Certified Balance Sheets, Profit & Loss accounts with all auditor notes for the last 2 financial years.
+- Banking History: Last 12 months operative current account bank statements.
+- Test PAN of enterprise and all active partners/directors.
+

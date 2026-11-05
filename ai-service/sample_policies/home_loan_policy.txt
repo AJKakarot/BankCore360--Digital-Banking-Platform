@@ -1,0 +1,36 @@
+BANKCORE360 APPROVED MORTGAGE LENDING POLICY: HOME LOANS
+Document ID: POL-HL-2026-V1
+Category: Home Loan Policy
+Version: 1.0
+Effective Date: 2026-01-01
+Status: ACTIVE
+
+1. PRODUCT OVERVIEW
+The BankCore360 Home Loan facility provides secured long-term financing for residential property acquisition, home construction, plot purchase and construction, and existing home expansion or renovation.
+
+2. ELIGIBILITY PARAMETERS
+- Age Criterion: Minimum 23 years at application; Maximum 65 years at loan maturity.
+- Co-applicant Requirement: Mandatory if spouse or primary earning family member co-owns the property.
+- Minimum Monthly Household Net Income: ₹35,000 combined.
+- Maximum FOIR: 55% for borrowers with monthly net income above ₹50,000; 50% for income below ₹50,000.
+- Loan to Value (LTV) Ratios:
+  * Up to ₹30 Lakhs: Maximum 90% of registered property value.
+  * ₹30 Lakhs to ₹75 Lakhs: Maximum 80% of registered property value.
+  * Above ₹75 Lakhs: Maximum 75% of registered property value.
+
+3. LOAN QUANTUM AND TENURE
+- Minimum Loan Quantum: ₹5,00,000.
+- Maximum Loan Quantum: ₹1,50,00,000 (Higher limits require Board Credit Committee sanction).
+- Tenure Range: 12 months to 360 months (30 years), subject to borrower retirement age.
+
+4. INTEREST RATES AND PRICING
+- Standard Floating Rate: 8.50% to 9.75% per annum pegged to external benchmark rate.
+- Processing Fee: 0.50% of loan amount (capped at ₹25,000).
+- Part-Prepayment: No charges on floating rate residential home loans.
+
+5. MANDATORY PROPERTY AND BORROWER DOCUMENTS
+- KYC Proof: Test PAN and Test Aadhaar of all applicants and co-owners.
+- Financial Documentation: Last 2 years Form 16 / ITR-V, 6 months bank statement, 3 months payslips.
+- Property Legal Documents: Registered Sale Deed, Allotment Letter, Non-Encumbrance Certificate (13 years), Approved Municipal Floor Plan.
+- Technical & Valuation Report: Satisfactory property inspection by BankCore360 empanelled technical officer.
+

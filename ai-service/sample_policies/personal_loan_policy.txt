@@ -1,0 +1,38 @@
+BANKCORE360 APPROVED RETAIL LENDING POLICY: PERSONAL LOANS
+Document ID: POL-PL-2026-V1
+Category: Personal Loan Policy
+Version: 1.0
+Effective Date: 2026-01-01
+Status: ACTIVE
+
+1. PRODUCT OVERVIEW
+The BankCore360 Personal Loan is an unsecured multi-purpose credit facility designed for salaried and self-employed individuals to meet personal financial needs such as medical emergencies, home renovation, wedding expenses, and debt consolidation.
+
+2. ELIGIBILITY PARAMETERS
+- Age Criterion: Minimum 21 years at loan application; Maximum 60 years at loan maturity.
+- Employment Status: Minimum 1 year continuous employment with current employer, or 2 years total professional experience.
+- Minimum Monthly Net Income: ₹15,000 for Tier-2/Tier-3 cities; ₹20,000 for Metro locations.
+- Maximum Debt-to-Income / FOIR (Fixed Obligation to Income Ratio): 50% across all existing credit obligations plus the proposed EMI.
+- Minimum Credit Score: 650 or higher. Applicants without credit history undergo manual underwriting by Maker-Checker.
+
+3. LOAN LIMITS AND TENURE
+- Minimum Loan Amount: ₹25,000.
+- Maximum Loan Amount: ₹10,00,000 (subject to income multiplier: maximum 10x net monthly salary).
+- Minimum Tenure: 6 months.
+- Maximum Tenure: 60 months (5 years).
+
+4. INTEREST RATES AND CHARGES
+- Interest Rate Type: Fixed or Floating reducing balance.
+- Indicative Rate Band: 10.50% to 14.50% per annum depending on credit score and employer category.
+- Processing Fee: 1.0% to 2.0% of the loan amount plus applicable taxes.
+- Foreclosure / Prepayment: Nil prepayment penalty after repayment of 6 monthly installments.
+
+5. REQUIRED SUPPORTING DOCUMENTS
+- Identity Proof: Test PAN Card (mandatory).
+- Address Proof: Test Aadhaar Card, Passport, or Electricity Bill under 3 months old.
+- Income Proof: Latest 3 months salary slips showing gross and net salary components.
+- Bank Statement: 6 months operative bank statement reflecting continuous salary credits.
+
+6. PROHIBITED USES AND DISQUALIFICATIONS
+Personal loan funds must never be utilized for speculative capital market investments, gambling, or illicit activities. Applications with overdue credit balances or active default status will be rejected automatically by Policy Rule PL-04.
+

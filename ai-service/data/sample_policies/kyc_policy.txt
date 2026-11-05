@@ -1,0 +1,30 @@
+
+SAMPLE BANKING POLICY
+Policy ID: KYC-001
+Version: 1.0
+
+Title: Customer KYC Verification Policy
+
+1. Purpose
+This sample policy describes basic customer identity verification
+requirements for a fictional bank.
+
+2. Required Documents
+A customer must provide an approved identity document and the
+additional documents required by the bank's verification process.
+
+3. Verification
+The bank must verify the submitted information before approving
+the customer's account application.
+
+4. Failed Verification
+If verification fails, the application must remain pending until
+the discrepancy is resolved by an authorized employee.
+
+5. Human Review
+Cases involving inconsistent identity information must be referred
+to an authorized reviewer.
+
+IMPORTANT:
+This is a fictional policy created for software testing.
+It is not an official banking or regulatory policy.

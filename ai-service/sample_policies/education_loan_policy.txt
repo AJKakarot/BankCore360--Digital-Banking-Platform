@@ -1,0 +1,37 @@
+BANKCORE360 APPROVED HIGHER STUDIES POLICY: EDUCATION LOANS
+Document ID: POL-ED-2026-V1
+Category: Education Loan Policy
+Version: 1.0
+Effective Date: 2026-01-01
+Status: ACTIVE
+
+1. PRODUCT OVERVIEW
+The BankCore360 Education Loan supports meritorious students securing admission to recognized undergraduate, postgraduate, and doctoral degree programs in premier domestic and overseas educational institutions.
+
+2. ELIGIBILITY CONDITIONS
+- Student must hold Indian citizenship and have secured confirmed admission through competitive entrance examination or merit selection.
+- Co-borrower: Mandatory parent, guardian, or earning spouse as joint co-applicant.
+- Minimum Co-borrower Net Monthly Income: ₹25,000.
+- Eligible Courses: UGC/AICTE approved degrees, accredited medical, engineering, management, STEM, and international university courses.
+
+3. FINANCING LIMITS AND MORATORIUM
+- Domestic Studies Maximum: Up to ₹15,00,000.
+- Overseas Studies Maximum: Up to ₹30,00,000 (higher amounts supported against tangible security collateral).
+- Margin Requirement:
+  * Up to ₹4 Lakhs: Nil margin (100% bank funding).
+  * Above ₹4 Lakhs (Domestic): 5% borrower contribution.
+  * Above ₹4 Lakhs (Overseas): 15% borrower contribution.
+- Moratorium Period (Repayment Holiday): Course duration plus 6 months, or 6 months after securing employment, whichever is earlier.
+- Maximum Repayment Tenure: Up to 120 months (10 years) following the moratorium completion.
+
+4. INTEREST RATES AND SUBSIDIES
+- Annual Rate of Interest: 9.00% to 11.25% per annum.
+- Concession: 0.50% special rate discount for female students.
+- Simple interest is charged during the moratorium period.
+
+5. VERIFICATION DOCUMENTATION
+- Confirmed Admission Offer Letter and fee structure schedule signed by the registrar.
+- Student academic records: 10th, 12th, graduation mark sheets, and entrance exam scorecards.
+- Co-applicant KYC: Test PAN, Test Aadhaar, 3 months salary slips or ITR.
+- Passport and student visa copy for foreign education applications.
+

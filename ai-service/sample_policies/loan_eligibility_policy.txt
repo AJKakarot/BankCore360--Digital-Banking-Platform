@@ -1,0 +1,33 @@
+BANKCORE360 CREDIT UNDERWRITING & LOAN ELIGIBILITY POLICY
+Document ID: POL-ELIG-2026-V1
+Category: Loan Eligibility Policy
+Version: 1.0
+Effective Date: 2026-01-01
+Status: ACTIVE
+
+1. CORE UNDERWRITING PHILOSOPHY
+BankCore360 follows prudent credit risk management guidelines designed to prevent retail customer over-indebtedness while promoting fair access to credit. Indicative eligibility estimates calculated online are preliminary assessments only and never constitute an official credit sanction.
+
+2. MINIMUM INCOME CRITERIA
+- Salaried Applicants: Minimum net verifiable monthly take-home income of ₹15,000 for Personal and Education loans; ₹35,000 for Home loans.
+- Self-Employed Individuals / Business Owners: Minimum audited net annual taxable income of ₹2,50,000 as declared in verified Income Tax Returns (ITR).
+
+3. DEBT-TO-INCOME AND FOIR RESTRICTIONS
+- The primary lending boundary is the Fixed Obligation to Income Ratio (FOIR):
+  FOIR = ((Total Existing Monthly EMIs + Proposed New EMI) / Net Monthly Income) * 100
+- Maximum allowable FOIR threshold is strictly 50.0% for monthly incomes up to ₹50,000.
+- For applicants with net monthly incomes exceeding ₹50,000, credit managers may permit FOIR up to 55.0% for secured Home Loans.
+- Applications with FOIR exceeding 50.0% are automatically flagged by system underwriting as HIGH_OBLIGATION_RISK and will be rejected unless the requested tenure is lengthened or the loan amount reduced.
+
+4. CREDIT SCORE AND DELINQUENCY BENCHMARKS
+- Preferred Credit Bureau Score: 700 and above.
+- Acceptable Score with Risk Premium: 650 to 699 (attracts 0.50% - 1.00% interest rate mark-up).
+- Sub-Prime / High Risk: Below 650. Requires joint solvent guarantor or 100% tangible collateral.
+- Delinquency History: Zero instances of 30+ Days Past Due (DPD) in the trailing 12 months. Any settled, written-off, or compromised credit account is grounds for outright rejection.
+
+5. FINAL APPROVAL DISCLOSURE AND GOVERNANCE
+Under no circumstances may an AI assistant, marketing portal, or customer service representative promise or guarantee loan sanction. Final credit approval is subject to:
+1. Satisfactory document verification by an authorized Checker.
+2. Property title search and valuation report (for secured loans).
+3. Formal approval and sanction order executed by an authorized Credit Manager.
+
