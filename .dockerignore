@@ -1,0 +1,10 @@
+target/
+frontend/
+ai-service/
+node_modules/
+.git/
+.gitignore
+.idea/
+*.md
+.DS_Store
+
