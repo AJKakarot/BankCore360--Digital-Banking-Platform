@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BankCore360 — Digital Loan Management Platform</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+    <!-- Header & Brand -->
+    <header>
+        <div class="brand">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2">
+                <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/>
+            </svg>
+            <h1>BankCore360</h1>
+            <span class="badge badge-cyan">Maker–Checker–Manager Platform</span>
+        </div>
+
+        <div class="nav-right">
+            <!-- Quick Role Switcher for Educational Testing -->
+            <div style="display:flex; gap:0.4rem; align-items:center;">
+                <span style="font-size:0.75rem; color:var(--text-muted);">Quick Role:</span>
+                <button class="btn btn-secondary btn-sm auth-switch-btn" data-user="dev_customer" data-role="CUSTOMER">Customer</button>
+                <button class="btn btn-secondary btn-sm auth-switch-btn" data-user="dev_checker" data-role="CHECKER">Checker</button>
+                <button class="btn btn-secondary btn-sm auth-switch-btn" data-user="dev_manager" data-role="MANAGER">Manager</button>
+                <button class="btn btn-secondary btn-sm auth-switch-btn" data-user="dev_admin" data-role="ADMIN">Admin</button>
+            </div>
+
+            <!-- Active User Display -->
+            <div class="user-pill">
+                <span id="current-user-display">dev_customer (CUSTOMER)</span>
+            </div>
+
+            <!-- In-App Notifications Bell -->
+            <div style="position:relative;">
+                <button class="btn btn-secondary btn-sm" onclick="toggleNotifDropdown()" style="position:relative;">
+                    🔔 <span id="notif-badge" class="badge badge-red" style="display:none; position:absolute; top:-6px; right:-6px; padding:2px 5px; font-size:0.65rem;">0</span>
+                </button>
+                <div id="notif-dropdown" style="display:none; position:absolute; right:0; top:36px; width:320px; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:var(--radius-md); box-shadow:var(--shadow); z-index:100; max-height:360px; overflow-y:auto;">
+                    <div style="padding:0.75rem 1rem; border-bottom:1px solid var(--border-color); font-weight:700; font-size:0.85rem;">Notifications</div>
+                    <div id="notif-dropdown-list"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Navigation Tabs -->
+    <nav class="tabs">
+        <button class="tab-btn active" data-target="tab-customer">Customer Portal</button>
+        <button class="tab-btn" data-target="tab-checker">Checker Queue</button>
+        <button class="tab-btn" data-target="tab-manager">Manager Approvals</button>
+        <button class="tab-btn" data-target="tab-admin">Admin Dashboard & Analytics</button>
+        <a href="/swagger-ui.html" target="_blank" class="tab-btn" style="text-decoration:none; color:var(--accent-blue);">OpenAPI Docs ↗</a>
+    </nav>
+
+    <main>
+        <!-- ========================================== -->
+        <!-- 1. CUSTOMER PORTAL TAB                    -->
+        <!-- ========================================== -->
+        <section id="tab-customer" class="tab-content active">
+            <div class="grid grid-2" style="margin-bottom:1.5rem;">
+
+                <!-- Loan Eligibility Calculator -->
+                <div class="card">
+                    <div class="card-title">
+                        <span>Loan Eligibility Calculator</span>
+                        <span id="res-status" class="badge badge-green">Calculating...</span>
+                    </div>
+
+                    <div class="form-group">
+                        <div style="display:flex; justify-content:space-between;">
+                            <label>Net Monthly Income</label>
+                            <span id="calc-income-val" style="font-weight:700; color:var(--accent-cyan);">₹50,000</span>
+                        </div>
+                        <input type="range" id="calc-income" min="15000" max="300000" step="5000" value="50000">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Existing Monthly EMIs (₹)</label>
+                        <input type="number" id="calc-existing-emi" value="0" min="0" placeholder="0">
+                    </div>
+
+                    <div class="form-group">
+                        <div style="display:flex; justify-content:space-between;">
+                            <label>Requested Loan Amount</label>
+                            <span id="calc-amount-val" style="font-weight:700; color:var(--accent-blue);">₹200,000</span>
+                        </div>
+                        <input type="range" id="calc-amount" min="20000" max="2500000" step="10000" value="200000">
+                    </div>
+
+                    <div class="grid grid-2" style="gap:1rem;">
+                        <div class="form-group">
+                            <div style="display:flex; justify-content:space-between;">
+                                <label>Tenure</label>
+                                <span id="calc-tenure-val" style="font-weight:700; color:var(--text-secondary);">24 Months</span>
+                            </div>
+                            <input type="range" id="calc-tenure" min="6" max="120" step="6" value="24">
+                        </div>
+                        <div class="form-group">
+                            <div style="display:flex; justify-content:space-between;">
+                                <label>Interest Rate (p.a.)</label>
+                                <span id="calc-rate-val" style="font-weight:700; color:var(--text-secondary);">10.5%</span>
+                            </div>
+                            <input type="range" id="calc-rate" min="7" max="20" step="0.25" value="10.5">
+                        </div>
+                    </div>
+
+                    <!-- Calculated Results Box -->
+                    <div style="background:var(--bg-card); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border-color); margin-top:0.5rem;">
+                        <div class="grid grid-4" style="text-align:center;">
+                            <div>
+                                <div style="font-size:0.75rem; color:var(--text-muted);">MONTHLY EMI</div>
+                                <div id="res-emi" style="font-size:1.15rem; font-weight:800; color:var(--accent-cyan);">₹0</div>
+                            </div>
+                            <div>
+                                <div style="font-size:0.75rem; color:var(--text-muted);">TOTAL INTEREST</div>
+                                <div id="res-interest" style="font-size:1.15rem; font-weight:700; color:var(--accent-amber);">₹0</div>
+                            </div>
+                            <div>
+                                <div style="font-size:0.75rem; color:var(--text-muted);">TOTAL REPAYMENT</div>
+                                <div id="res-total" style="font-size:1.15rem; font-weight:700;">₹0</div>
+                            </div>
+                            <div>
+                                <div style="font-size:0.75rem; color:var(--text-muted);">FOIR (DTI)</div>
+                                <div id="res-foir" style="font-size:1.15rem; font-weight:700; color:var(--accent-purple);">0%</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:0.75rem; font-size:0.8rem; color:var(--text-secondary);" id="res-msg"></div>
+                        <div style="margin-top:0.25rem; font-size:0.8rem; color:var(--text-muted);">Max Borrowing Capacity at 50% FOIR: <strong id="res-max-loan" style="color:var(--accent-green);">₹0</strong></div>
+                    </div>
+                </div>
+
+                <!-- Apply for Loan & Document Upload -->
+                <div>
+                    <!-- Loan Application Form -->
+                    <div class="card" style="margin-bottom:1.5rem;">
+                        <div class="card-title">Apply for a New Loan</div>
+                        <form id="loan-apply-form" onsubmit="submitLoanApplication(event)">
+                            <div class="grid grid-2" style="gap:1rem;">
+                                <div class="form-group">
+                                    <label>Loan Type</label>
+                                    <select id="app-type" required>
+                                        <option value="PERSONAL">Personal Loan (10.5%–14%)</option>
+                                        <option value="HOME">Home Loan (8.5%–9.5%)</option>
+                                        <option value="EDUCATION">Education Loan (9.0%–11%)</option>
+                                        <option value="BUSINESS">Business Loan (11%–15%)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Loan Amount (₹)</label>
+                                    <input type="number" id="app-amount" value="150000" min="5000" required>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-2" style="gap:1rem;">
+                                <div class="form-group">
+                                    <label>Tenure (Months)</label>
+                                    <input type="number" id="app-tenure" value="24" min="6" max="360" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Purpose</label>
+                                    <input type="text" id="app-purpose" placeholder="e.g. Higher education, Home renovation" required>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" style="width:100%;">Submit Loan Application</button>
+                        </form>
+                    </div>
+
+                    <!-- Upload Supporting Documents -->
+                    <div class="card">
+                        <div class="card-title">Upload Supporting Documents</div>
+                        <form id="doc-upload-form" onsubmit="uploadLoanDocument(event)">
+                            <div class="form-group">
+                                <label>Target Loan Application</label>
+                                <select id="doc-app-select" required></select>
+                            </div>
+
+                            <div class="grid grid-2" style="gap:1rem;">
+                                <div class="form-group">
+                                    <label>Document Type</label>
+                                    <select id="doc-type-select" required>
+                                        <option value="PAN">PAN Card (Identity Proof)</option>
+                                        <option value="AADHAAR">Aadhaar (Dummy Test Document)</option>
+                                        <option value="INCOME_PROOF">Income Proof (Salary Slip)</option>
+                                        <option value="BANK_STATEMENT">Bank Statement (6 Months)</option>
+                                        <option value="ADDRESS_PROOF">Address Proof</option>
+                                        <option value="OTHER">Other Supporting Document</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>File (PDF, JPEG, PNG < 5MB)</label>
+                                    <input type="file" id="doc-file-input" accept=".pdf,image/jpeg,image/png" required>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-secondary" style="width:100%;">Upload Document</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Applications List -->
+            <div class="card">
+                <div class="card-title">
+                    <span>My Loan Applications</span>
+                    <button class="btn btn-secondary btn-sm" onclick="loadMyApplications()">Refresh</button>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>Product</th>
+                                <th>Requested</th>
+                                <th>Tenure</th>
+                                <th>Status</th>
+                                <th>Submitted Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customer-apps-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- 2. CHECKER QUEUE TAB                       -->
+        <!-- ========================================== -->
+        <section id="tab-checker" class="tab-content">
+            <div class="card">
+                <div class="card-title">
+                    <span>Pending Applications Queue (Checker Review)</span>
+                    <button class="btn btn-secondary btn-sm" onclick="loadCheckerQueue()">Refresh</button>
+                </div>
+                <p style="color:var(--text-secondary); font-size:0.875rem; margin-bottom:1rem;">
+                    Inspect applicant details, examine uploaded identity and income proofs, verify or reject individual documents with mandatory reasons, and forward compliant files to Manager.
+                </p>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>Applicant</th>
+                                <th>Loan Type</th>
+                                <th>Requested Terms</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="checker-queue-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- 3. MANAGER APPROVALS TAB                   -->
+        <!-- ========================================== -->
+        <section id="tab-manager" class="tab-content">
+            <div class="card">
+                <div class="card-title">
+                    <span>Manager Final Approvals & Disbursement Queue</span>
+                    <button class="btn btn-secondary btn-sm" onclick="loadManagerQueue()">Refresh</button>
+                </div>
+                <p style="color:var(--text-secondary); font-size:0.875rem; margin-bottom:1rem;">
+                    Review document-verified applications, determine approved terms (credit limit, rate, tenure), record final approval or rejection, and execute simulated disbursement.
+                </p>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>Applicant</th>
+                                <th>Type</th>
+                                <th>Requested Terms</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="manager-queue-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- 4. ADMIN DASHBOARD & ANALYTICS TAB         -->
+        <!-- ========================================== -->
+        <section id="tab-admin" class="tab-content">
+            <!-- Analytics Cards Grid -->
+            <div class="grid grid-4" style="margin-bottom:1.5rem;">
+                <div class="card" style="text-align:center;">
+                    <div style="font-size:0.8rem; color:var(--text-muted);">TOTAL CUSTOMERS</div>
+                    <div id="adm-customers" style="font-size:1.75rem; font-weight:800; color:var(--accent-blue);">0</div>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div style="font-size:0.8rem; color:var(--text-muted);">TOTAL APPLICATIONS</div>
+                    <div id="adm-apps" style="font-size:1.75rem; font-weight:800; color:var(--accent-cyan);">0</div>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div style="font-size:0.8rem; color:var(--text-muted);">PENDING CHECKER</div>
+                    <div id="adm-pending-checker" style="font-size:1.75rem; font-weight:800; color:var(--accent-amber);">0</div>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div style="font-size:0.8rem; color:var(--text-muted);">PENDING MANAGER</div>
+                    <div id="adm-pending-manager" style="font-size:1.75rem; font-weight:800; color:var(--accent-purple);">0</div>
+                </div>
+            </div>
+
+            <div class="grid grid-4" style="margin-bottom:1.5rem;">
+                <div class="card" style="text-align:center;">
+                    <div style="font-size:0.8rem; color:var(--text-muted);">APPROVED LOANS</div>
+                    <div id="adm-approved" style="font-size:1.75rem; font-weight:800; color:var(--accent-green);">0</div>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div style="font-size:0.8rem; color:var(--text-muted);">DISBURSED LOANS</div>
+                    <div id="adm-disbursed" style="font-size:1.75rem; font-weight:800; color:var(--accent-cyan);">0</div>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div style="font-size:0.8rem; color:var(--text-muted);">TOTAL APPROVED AMOUNT</div>
+                    <div id="adm-approved-amt" style="font-size:1.4rem; font-weight:800; color:var(--accent-green);">₹0</div>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div style="font-size:0.8rem; color:var(--text-muted);">TOTAL DISBURSED AMOUNT</div>
+                    <div id="adm-disbursed-amt" style="font-size:1.4rem; font-weight:800; color:var(--accent-cyan);">₹0</div>
+                </div>
+            </div>
+
+            <!-- Create Privileged User Panel -->
+            <div class="card" style="margin-bottom:1.5rem;">
+                <div class="card-title">Provision Privileged Staff User (Admin Only)</div>
+                <form id="create-user-form" onsubmit="createPrivilegedUser(event)">
+                    <div class="grid grid-4" style="gap:1rem;">
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="p-username" placeholder="staff_username" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="p-email" placeholder="staff@bankcore360.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="p-password" placeholder="Min 8 chars, 1 digit, 1 special" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Role</label>
+                            <select id="p-role" required>
+                                <option value="CHECKER">CHECKER</option>
+                                <option value="MANAGER">MANAGER</option>
+                                <option value="ADMIN">ADMIN</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Privileged User</button>
+                </form>
+            </div>
+
+            <!-- System Audit Logs Table -->
+            <div class="card">
+                <div class="card-title">
+                    <span>System-Wide Loan Audit Logs</span>
+                    <button class="btn btn-secondary btn-sm" onclick="loadAdminAuditLogs()">Refresh</button>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ref</th>
+                                <th>Actor</th>
+                                <th>Action</th>
+                                <th>Status Transition</th>
+                                <th>Timestamp</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-audit-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ========================================== -->
+    <!-- MODALS                                     -->
+    <!-- ========================================== -->
+
+    <!-- 1. Application Details Modal -->
+    <div id="app-details-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="card-title">
+                <span>Application <span id="modal-app-ref"></span></span>
+                <button class="btn btn-secondary btn-sm" onclick="closeModal('app-details-modal')">✕</button>
+            </div>
+            <div id="modal-app-details"></div>
+            <h4 style="margin-top:1.2rem; font-size:0.95rem;">Uploaded Documents</h4>
+            <div id="modal-docs-list"></div>
+        </div>
+    </div>
+
+    <!-- 2. Checker Review Modal -->
+    <div id="checker-review-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width:700px;">
+            <div class="card-title">
+                <span>Checker Review: <span id="checker-review-app-ref"></span></span>
+                <button class="btn btn-secondary btn-sm" onclick="closeModal('checker-review-modal')">✕</button>
+            </div>
+            <div id="checker-review-summary" style="margin-bottom:1rem; padding:0.85rem; background:var(--bg-card); border-radius:6px;"></div>
+            
+            <h4 style="margin-bottom:0.75rem; font-size:0.95rem;">Attached Supporting Documents</h4>
+            <div id="checker-docs-container"></div>
+
+            <div style="margin-top:1.5rem; display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-color); padding-top:1rem;">
+                <span style="font-size:0.8rem; color:var(--text-muted);">Ensure all mandatory documents are marked VERIFIED before forwarding.</span>
+                <button class="btn btn-success" onclick="forwardApplicationToManager()">Forward to Manager &rarr;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Manager Decision Modal -->
+    <div id="manager-decision-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="card-title">
+                <span>Manager Decision: <span id="mgr-app-ref"></span></span>
+                <button class="btn btn-secondary btn-sm" onclick="closeModal('manager-decision-modal')">✕</button>
+            </div>
+            <div style="margin-bottom:1rem;">
+                <div id="mgr-applicant" style="font-weight:700;"></div>
+                <div id="mgr-loan-info" style="color:var(--text-secondary); font-size:0.85rem;"></div>
+            </div>
+
+            <div class="grid grid-2" style="gap:1rem;">
+                <div class="form-group">
+                    <label>Approved Amount (₹)</label>
+                    <input type="number" id="mgr-approve-amount" required>
+                </div>
+                <div class="form-group">
+                    <label>Interest Rate (% p.a.)</label>
+                    <input type="number" id="mgr-approve-rate" step="0.05" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Approved Tenure (Months)</label>
+                <input type="number" id="mgr-approve-tenure" required>
+            </div>
+
+            <div class="form-group">
+                <label>Manager Remarks</label>
+                <textarea id="mgr-approve-remarks" rows="3"></textarea>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.25rem;">
+                <button class="btn btn-danger" onclick="submitManagerRejection()">Reject Application</button>
+                <button class="btn btn-success" onclick="submitManagerApproval()">Approve Loan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. EMI Amortization Schedule Modal -->
+    <div id="emi-schedule-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width:850px;">
+            <div class="card-title">
+                <span>Repayment Schedule: <span id="emi-app-ref"></span></span>
+                <button class="btn btn-secondary btn-sm" onclick="closeModal('emi-schedule-modal')">✕</button>
+            </div>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
+                Standardized monthly reducing-balance amortization schedule. Interest is charged on remaining principal balance only.
+            </p>
+            <div class="table-wrapper" style="max-height:50vh; overflow-y:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Due Date</th>
+                            <th>EMI Amount</th>
+                            <th>Principal</th>
+                            <th>Interest</th>
+                            <th>Remaining Balance</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="emi-schedule-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- FLOATING AI ASSISTANT                      -->
+    <!-- ========================================== -->
+    <button id="ai-fab" class="ai-fab" title="Ask BankCore360 AI Assistant">🤖</button>
+
+    <div id="ai-modal" class="ai-modal">
+        <div class="ai-header">
+            <div>
+                <strong style="font-size:0.95rem;">AI Banking Assistant</strong>
+                <div style="font-size:0.7rem; color:var(--accent-cyan);">RAG Policy & Guidance Bot</div>
+            </div>
+            <button id="ai-close-btn" class="btn btn-secondary btn-sm" style="padding:2px 8px;">✕</button>
+        </div>
+        <div id="ai-messages" class="ai-messages">
+            <div class="chat-bubble bubble-bot">
+                Hello! I am your BankCore360 AI Assistant. Ask me about loan products, eligibility guidelines (₹15,000 min income, 50% max FOIR), required documents, or how reducing-balance EMI works!
+            </div>
+        </div>
+        <form id="ai-chat-form" class="ai-input-area">
+            <input type="text" id="ai-chat-input" placeholder="Ask a loan policy question..." autocomplete="off" required>
+            <button type="submit" class="btn btn-primary btn-sm">Send</button>
+        </form>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>
+
