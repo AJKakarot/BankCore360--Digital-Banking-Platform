@@ -33,6 +33,7 @@ import {
   UserSession
 } from "@/lib/api";
 import { toast } from "@/components/ui/Toast";
+import PaymentGatewayModal from "@/components/PaymentGatewayModal";
 
 export default function CustomerDashboard() {
   const router = useRouter();
@@ -44,6 +45,8 @@ export default function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
   const [payingId, setPayingId] = useState<number | null>(null);
   const [triggeringCheck, setTriggeringCheck] = useState(false);
+  const [modalRepayment, setModalRepayment] = useState<LoanRepaymentItem | null>(null);
+  const [isGatewayOpen, setIsGatewayOpen] = useState(false);
 
   const loadDashboardData = async () => {
     try {
@@ -122,25 +125,37 @@ export default function CustomerDashboard() {
     loadDashboardData();
   }, [router]);
 
-  const handlePayEmi = async (item: LoanRepaymentItem) => {
+  const openPaymentGateway = (item: LoanRepaymentItem) => {
+    setModalRepayment(item);
+    setIsGatewayOpen(true);
+  };
+
+  const executePaymentFromGateway = async (item: LoanRepaymentItem, method: string) => {
     setPayingId(item.id);
     try {
-      await payEmiInstallment(item.id, item.applicationReference);
+      await payEmiInstallment(item.id, item.applicationReference, method);
       toast.success(
         "🎉 EMI Paid Successfully!",
-        `Paid ₹${(item.totalPayableAmount || item.emiAmount).toLocaleString()} for Installment #${item.installmentNumber}. Central Bank Vault replenished.`
+        `Paid ₹${(item.totalPayableAmount || item.emiAmount).toLocaleString()} via ${method} for Installment #${item.installmentNumber}. Central Bank Vault replenished.`
       );
       // Mark as PAID locally & refresh
       setRepayments((prev) =>
         prev.map((r) =>
           r.id === item.id
-            ? { ...r, status: "PAID", paidAt: new Date().toISOString(), paymentReference: "PAY-" + Math.random().toString(36).substring(2, 9).toUpperCase() }
+            ? {
+                ...r,
+                status: "PAID",
+                paidAt: new Date().toISOString(),
+                paymentReference:
+                  "PAY-" + Math.random().toString(36).substring(2, 9).toUpperCase(),
+              }
             : r
         )
       );
       await loadDashboardData();
     } catch (err: any) {
       toast.error("Payment Failed", err.message || "Failed to process EMI payment");
+      throw err;
     } finally {
       setPayingId(null);
     }
@@ -368,7 +383,7 @@ export default function CustomerDashboard() {
 
             {repayments.find((r) => r.status === "OVERDUE") && (
               <button
-                onClick={() => handlePayEmi(repayments.find((r) => r.status === "OVERDUE")!)}
+                onClick={() => openPaymentGateway(repayments.find((r) => r.status === "OVERDUE")!)}
                 disabled={payingId === repayments.find((r) => r.status === "OVERDUE")!.id}
                 className="px-4 py-2 rounded-full bg-red-500 hover:bg-red-600 text-white font-bold text-xs whitespace-nowrap shadow-lg shadow-red-500/20 active:scale-95 disabled:opacity-50"
               >
@@ -460,7 +475,7 @@ export default function CustomerDashboard() {
                         </span>
                       ) : (
                         <button
-                          onClick={() => handlePayEmi(rep)}
+                          onClick={() => openPaymentGateway(rep)}
                           disabled={payingId === rep.id}
                           className={`px-3 py-1.5 rounded-full font-bold text-xs transition inline-flex items-center space-x-1.5 shadow-md active:scale-95 disabled:opacity-50 ${
                             isOverdue
@@ -591,6 +606,14 @@ export default function CustomerDashboard() {
           </div>
         </Link>
       </div>
+
+      {/* Simulated Banking Payment Gateway Modal */}
+      <PaymentGatewayModal
+        isOpen={isGatewayOpen}
+        onClose={() => setIsGatewayOpen(false)}
+        repayment={modalRepayment}
+        onConfirmPayment={executePaymentFromGateway}
+      />
     </div>
   );
 }

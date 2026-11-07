@@ -110,8 +110,11 @@ public class LoanApplicationController {
     @PreAuthorize("hasRole('CUSTOMER')")
     @Operation(summary = "1-Click pay EMI installment", description = "Directly pays an EMI installment by its ID, applying any late fees and crediting Bank Vault")
     public ResponseEntity<LoanRepaymentResponse> payRepaymentDirect(@PathVariable Long repaymentId,
+                                                                    @RequestParam(required = false) String paymentMode,
                                                                     Authentication authentication) {
-        LoanRepaymentResponse response = customerLoanService.payRepaymentById(repaymentId, authentication);
+        LoanRepaymentResponse response = (paymentMode != null && !paymentMode.isBlank())
+                ? customerLoanService.payRepaymentById(repaymentId, paymentMode, authentication)
+                : customerLoanService.payRepaymentById(repaymentId, authentication);
         return ResponseEntity.ok(response);
     }
 
@@ -137,8 +140,11 @@ public class LoanApplicationController {
     @Operation(summary = "Simulated payment for an EMI installment", description = "Records repayment of an installment and updates outstanding balance")
     public ResponseEntity<LoanRepaymentResponse> payEmiInstallment(@PathVariable String applicationReference,
                                                                    @PathVariable Long repaymentId,
+                                                                   @RequestParam(required = false) String paymentMode,
                                                                    Authentication authentication) {
-        LoanRepaymentResponse response = customerLoanService.payEmiInstallment(applicationReference, repaymentId, authentication);
+        LoanRepaymentResponse response = (paymentMode != null && !paymentMode.isBlank())
+                ? customerLoanService.payEmiInstallment(applicationReference, repaymentId, paymentMode, authentication)
+                : customerLoanService.payEmiInstallment(applicationReference, repaymentId, authentication);
         return ResponseEntity.ok(response);
     }
 }

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   NotificationItem,
+  LoanRepaymentItem,
   fetchNotifications,
   markAllNotificationsAsRead,
   markNotificationAsRead,
@@ -14,6 +15,7 @@ import {
   getActiveUser
 } from "@/lib/api";
 import { toast } from "@/components/ui/Toast";
+import PaymentGatewayModal from "@/components/PaymentGatewayModal";
 
 const SAMPLE_NOTIFICATIONS: NotificationItem[] = [
   {
@@ -59,6 +61,9 @@ export default function NotificationsPage() {
   const [triggeringCheck, setTriggeringCheck] = useState(false);
   const [filterMode, setFilterMode] = useState<"ALL" | "PAYMENTS_ONLY">("ALL");
   const [isDemoData, setIsDemoData] = useState(false);
+  const [modalRepayment, setModalRepayment] = useState<LoanRepaymentItem | null>(null);
+  const [isGatewayOpen, setIsGatewayOpen] = useState(false);
+  const [activeNotificationId, setActiveNotificationId] = useState<number | null>(null);
 
   useEffect(() => {
     const user = getActiveUser();
@@ -108,40 +113,65 @@ export default function NotificationsPage() {
     }
   };
 
-  const handlePayEmiFromNotification = async (item: NotificationItem, e: React.MouseEvent) => {
+  const handleOpenGatewayForNotification = (item: NotificationItem, e: React.MouseEvent) => {
     e.stopPropagation();
-    setPayingId(item.id);
+    setActiveNotificationId(item.id);
 
+    let repaymentId = 1;
+    let appRef = item.relatedReference || "LN-2026";
+    let amount = 8884.88;
+    let lateFee = 0;
+
+    if (item.actionPayload) {
+      try {
+        const parsed = JSON.parse(item.actionPayload);
+        if (parsed.repaymentId) repaymentId = parsed.repaymentId;
+        if (parsed.applicationReference) appRef = parsed.applicationReference;
+        if (parsed.amount) amount = parsed.amount;
+      } catch {
+        // ignore
+      }
+    }
+
+    if (item.notificationType === "EMI_OVERDUE") {
+      lateFee = 500;
+    }
+
+    const rep: LoanRepaymentItem = {
+      id: repaymentId,
+      installmentNumber: 1,
+      dueDate: new Date().toISOString().split("T")[0],
+      emiAmount: lateFee > 0 ? Math.max(amount - lateFee, 1000) : amount,
+      principalComponent: amount * 0.85,
+      interestComponent: amount * 0.15,
+      outstandingBalance: 80000,
+      status: lateFee > 0 ? "OVERDUE" : "UPCOMING",
+      latePenaltyAmount: lateFee,
+      totalPayableAmount: amount,
+      applicationReference: appRef,
+      isOverdue: lateFee > 0,
+    };
+
+    setModalRepayment(rep);
+    setIsGatewayOpen(true);
+  };
+
+  const handleConfirmGatewayPayment = async (repayment: LoanRepaymentItem, method: string) => {
     try {
-      let repaymentId: number | null = null;
-      let appRef = item.relatedReference;
-
-      if (item.actionPayload) {
-        try {
-          const parsed = JSON.parse(item.actionPayload);
-          if (parsed.repaymentId) repaymentId = parsed.repaymentId;
-          if (parsed.applicationReference) appRef = parsed.applicationReference;
-        } catch {
-          // ignore parse errors
-        }
-      }
-
-      if (!repaymentId) {
-        // Fallback default repayment id
-        repaymentId = 1;
-      }
-
       if (!isDemoData) {
-        await payEmiInstallment(repaymentId, appRef);
+        await payEmiInstallment(repayment.id, repayment.applicationReference, method);
       }
-
-      toast.success("🎉 Payment Received!", `EMI paid successfully! Funds credited to Bank Central Vault. Receipt recorded.`);
-      await handleMarkSingleRead(item.id);
+      toast.success(
+        "🎉 Payment Received!",
+        `Paid ₹${(repayment.totalPayableAmount || repayment.emiAmount).toLocaleString()} via ${method}! Funds credited to Central Bank Vault.`
+      );
+      if (activeNotificationId) {
+        await handleMarkSingleRead(activeNotificationId);
+      }
       await loadNotifications();
     } catch (err: any) {
-      toast.error("Payment Failed", err.message || "Could not process repayment at this moment.");
-    } finally {
-      setPayingId(null);
+      toast.error("Payment Failed", err.message || "Could not process repayment.");
+      throw err;
     }
   };
 
@@ -363,20 +393,15 @@ export default function NotificationsPage() {
                     {canPay && !isSuccess && (
                       <div className="pt-2 flex flex-wrap items-center gap-3">
                         <button
-                          onClick={(e) => handlePayEmiFromNotification(item, e)}
-                          disabled={payingId === item.id}
-                          className={`px-4 py-2 rounded-full font-bold text-xs transition flex items-center space-x-2 shadow-lg active:scale-95 disabled:opacity-50 ${
+                          onClick={(e) => handleOpenGatewayForNotification(item, e)}
+                          className={`px-4 py-2 rounded-full font-bold text-xs transition flex items-center space-x-2 shadow-lg active:scale-95 ${
                             isOverdue
                               ? "bg-red-500 hover:bg-red-600 text-white shadow-red-500/20"
                               : "bg-[#CAFF33] hover:bg-[#b8eb2a] text-black shadow-[#CAFF33]/20"
                           }`}
                         >
                           <CreditCard className="w-3.5 h-3.5" />
-                          <span>
-                            {payingId === item.id
-                              ? "Processing Payment..."
-                              : item.actionLabel || "Pay EMI Now"}
-                          </span>
+                          <span>{item.actionLabel || "Pay EMI Now"}</span>
                         </button>
 
                         <Link
@@ -395,6 +420,14 @@ export default function NotificationsPage() {
           })
         )}
       </div>
+
+      {/* Simulated Banking Payment Gateway Modal */}
+      <PaymentGatewayModal
+        isOpen={isGatewayOpen}
+        onClose={() => setIsGatewayOpen(false)}
+        repayment={modalRepayment}
+        onConfirmPayment={handleConfirmGatewayPayment}
+      />
     </div>
   );
 }

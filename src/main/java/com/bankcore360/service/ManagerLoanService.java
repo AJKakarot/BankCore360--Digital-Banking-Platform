@@ -224,7 +224,7 @@ public class ManagerLoanService {
         return mapToResponse(savedApp);
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public DisbursementResponse disburseLoan(Long applicationId, Authentication auth) {
         LoanApplication app = loanApplicationRepository.findById(applicationId)
                 .orElseThrow(() -> new LoanApplicationNotFoundException("Loan application with ID " + applicationId + " not found"));

@@ -1182,11 +1182,13 @@ export async function fetchMyRepayments(): Promise<LoanRepaymentItem[]> {
 
 export async function payEmiInstallment(
   repaymentId: number,
-  applicationReference?: string
+  applicationReference?: string,
+  paymentMode: string = "SIMULATED_UPI_GATEWAY"
 ): Promise<LoanRepaymentItem> {
+  const query = `?paymentMode=${encodeURIComponent(paymentMode)}`;
   const url = applicationReference
-    ? `${SPRING_BOOT_API}/api/loans/${applicationReference}/repayments/${repaymentId}/pay`
-    : `${SPRING_BOOT_API}/api/loans/repayments/${repaymentId}/pay`;
+    ? `${SPRING_BOOT_API}/api/loans/${applicationReference}/repayments/${repaymentId}/pay${query}`
+    : `${SPRING_BOOT_API}/api/loans/repayments/${repaymentId}/pay${query}`;
 
   const res = await fetch(url, {
     method: "POST",

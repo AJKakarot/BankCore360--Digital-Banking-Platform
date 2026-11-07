@@ -81,8 +81,9 @@ public class BankVaultService {
     /**
      * Atomic & Idempotent Loan Disbursement from the Bank Vault directly to Customer Account.
      * Uses PESSIMISTIC_WRITE lock on BankVault to prevent concurrency double-spending race conditions.
+     * Full ACID rollback on any failure.
      */
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public VaultTransaction disburseLoanFromVault(LoanApplication app, String operator) {
         String idempotencyKey = "DISBURSE-" + app.getApplicationReference();
 
@@ -156,7 +157,7 @@ public class BankVaultService {
     /**
      * Admin Capital Injection to increase bank vault liquidity pool.
      */
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public VaultTransaction injectCapital(InjectCapitalRequest request, String adminUsername) {
         BigDecimal amount = request.getAmount();
 
@@ -202,10 +203,15 @@ public class BankVaultService {
 
     /**
      * Records atomic & idempotent repayment inflow into the Central Bank Vault.
-     * Replenishes the availableLiquidity pool and increments totalRepaid.
+     * Replenishes the availableLiquidity pool and increments totalRepaid with complete rollback safety.
      */
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public VaultTransaction recordRepaymentInflow(String loanReference, Integer installmentNumber, BigDecimal amount, String payerUsername) {
+        return recordRepaymentInflow(loanReference, installmentNumber, amount, payerUsername, "SIMULATED_GATEWAY");
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    public VaultTransaction recordRepaymentInflow(String loanReference, Integer installmentNumber, BigDecimal amount, String payerUsername, String paymentMode) {
         String idempotencyKey = "REPAY-" + loanReference + "-INST-" + installmentNumber;
 
         Optional<VaultTransaction> existing = vaultTransactionRepository.findByIdempotencyKey(idempotencyKey);
@@ -229,6 +235,7 @@ public class BankVaultService {
         vault.setUpdatedAt(LocalDateTime.now());
         bankVaultRepository.save(vault);
 
+        String mode = (paymentMode != null && !paymentMode.isBlank()) ? paymentMode : "SIMULATED_GATEWAY";
         String txnRef = generateTransactionReference("RPY");
         VaultTransaction txn = new VaultTransaction(
                 txnRef,
@@ -242,12 +249,12 @@ public class BankVaultService {
                 "VAULT-001",
                 payerUsername != null ? payerUsername : "CUSTOMER",
                 payerUsername != null ? payerUsername : "CUSTOMER",
-                "EMI Repayment Inflow for " + loanReference + " (Installment #" + installmentNumber + ") of ₹" + amount
+                "EMI Repayment Inflow via " + mode + " for " + loanReference + " (Installment #" + installmentNumber + ") of ₹" + amount
         );
 
         VaultTransaction saved = vaultTransactionRepository.save(txn);
-        log.info("💰 [REPAYMENT INFLOW ATOMIC] Credited ₹{} to Vault (New Liquidity: ₹{}). Total Repaid: ₹{}",
-                amount, balanceAfter, vault.getTotalRepaid());
+        log.info("💰 [REPAYMENT INFLOW ATOMIC] Credited ₹{} via {} to Vault (New Liquidity: ₹{}). Total Repaid: ₹{}",
+                amount, mode, balanceAfter, vault.getTotalRepaid());
         return saved;
     }
 

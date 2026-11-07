@@ -248,8 +248,13 @@ public class CustomerLoanService {
                 .toList();
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public LoanRepaymentResponse payEmiInstallment(String reference, Long repaymentId, Authentication auth) {
+        return payEmiInstallment(reference, repaymentId, "SIMULATED_GATEWAY", auth);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public LoanRepaymentResponse payEmiInstallment(String reference, Long repaymentId, String paymentMode, Authentication auth) {
         LoanApplication loanApp = loanApplicationRepository.findByApplicationReference(reference)
                 .orElseThrow(() -> new LoanApplicationNotFoundException("Loan application with reference " + reference + " not found"));
 
@@ -269,19 +274,22 @@ public class CustomerLoanService {
 
         BigDecimal totalPayable = installment.getTotalPayableAmount();
         String principalName = auth != null ? auth.getName() : "CUSTOMER";
+        String effectiveMode = (paymentMode != null && !paymentMode.isBlank()) ? paymentMode : "SIMULATED_GATEWAY";
 
-        // 1. Credit Central Bank Vault via Repayment Inflow atomically
+        // 1. Credit Central Bank Vault via Repayment Inflow atomically (guaranteed ACID rollback if fails)
         if (bankVaultService != null) {
             bankVaultService.recordRepaymentInflow(
                     reference,
                     installment.getInstallmentNumber(),
                     totalPayable,
-                    loanApp.getCustomer() != null ? loanApp.getCustomer().getFullName() : principalName
+                    loanApp.getCustomer() != null ? loanApp.getCustomer().getFullName() : principalName,
+                    effectiveMode
             );
         }
 
-        // 2. Deduct from customer's primary BankAccount if balance is sufficient
-        if (bankAccountRepository != null && loanApp.getCustomer() != null && loanApp.getCustomer().getId() != null) {
+        // 2. Deduct from customer's primary BankAccount if balance is sufficient and method is ACCOUNT_DEBIT
+        if ("ACCOUNT_DEBIT".equalsIgnoreCase(effectiveMode) && bankAccountRepository != null
+                && loanApp.getCustomer() != null && loanApp.getCustomer().getId() != null) {
             List<BankAccount> accounts = bankAccountRepository.findByCustomerIdOrderByCreatedAtDesc(loanApp.getCustomer().getId());
             if (!accounts.isEmpty()) {
                 BankAccount acc = accounts.get(0);
@@ -314,15 +322,16 @@ public class CustomerLoanService {
                 RepaymentStatus.UPCOMING.name(),
                 RepaymentStatus.PAID.name(),
                 "Paid installment #" + savedRepayment.getInstallmentNumber() + " total amount ₹" + totalPayable
+                        + " via " + effectiveMode
                         + (savedRepayment.getLatePenaltyAmount().compareTo(BigDecimal.ZERO) > 0 ? " (includes late fee ₹" + savedRepayment.getLatePenaltyAmount() + ")" : "")
         );
 
         notificationService.notifyUserWithAction(
                 principalName,
                 "PAYMENT_SUCCESS",
-                "✅ EMI Payment Successful",
+                "✅ EMI Payment Successful (" + effectiveMode + ")",
                 "Successfully received ₹" + totalPayable + " for installment #"
-                        + savedRepayment.getInstallmentNumber() + " of loan " + reference + ". Ref: "
+                        + savedRepayment.getInstallmentNumber() + " of loan " + reference + " via " + effectiveMode + ". Ref: "
                         + savedRepayment.getPaymentReference() + ". Bank liquidity reserve replenished.",
                 reference,
                 "/customer/dashboard",
@@ -344,11 +353,16 @@ public class CustomerLoanService {
         return mapToRepaymentResponse(savedRepayment);
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public LoanRepaymentResponse payRepaymentById(Long repaymentId, Authentication auth) {
+        return payRepaymentById(repaymentId, "SIMULATED_GATEWAY", auth);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public LoanRepaymentResponse payRepaymentById(Long repaymentId, String paymentMode, Authentication auth) {
         LoanRepayment installment = loanRepaymentRepository.findById(repaymentId)
                 .orElseThrow(() -> new LoanApplicationNotFoundException("Installment ID " + repaymentId + " not found"));
-        return payEmiInstallment(installment.getLoanApplication().getApplicationReference(), repaymentId, auth);
+        return payEmiInstallment(installment.getLoanApplication().getApplicationReference(), repaymentId, paymentMode, auth);
     }
 
     @Transactional(readOnly = true)
