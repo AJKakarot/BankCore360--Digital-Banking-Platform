@@ -34,7 +34,7 @@ export default function ApplicationsPage() {
   const handleDisburse = async (app: LoanApplication) => {
     setDisbursingRef(app.applicationReference);
     try {
-      await disburseCustomerLoan(app.applicationReference);
+      await disburseCustomerLoan(app.applicationReference, app.id);
       toast.success(
         "🎉 Funds Disbursed!",
         `₹${(app.approvedAmount || app.requestedAmount).toLocaleString()} credited to your Operative Account from Bank Vault!`

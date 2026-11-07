@@ -178,10 +178,10 @@ export default function CustomerDashboard() {
 
   const approvedLoans = applications.filter((a) => a.status === "APPROVED");
 
-  const handleDisburseApprovedLoan = async (ref: string) => {
+  const handleDisburseApprovedLoan = async (ref: string, appId?: number) => {
     setDisbursingLoanRef(ref);
     try {
-      await disburseCustomerLoan(ref);
+      await disburseCustomerLoan(ref, appId);
       toast.success(
         "🎉 Funds Disbursed to Account!",
         `Loan amount successfully transferred from Central Bank Vault into your Operative Account.`
@@ -258,7 +258,7 @@ export default function CustomerDashboard() {
             </div>
 
             <button
-              onClick={() => handleDisburseApprovedLoan(approvedLoans[0].applicationReference)}
+              onClick={() => handleDisburseApprovedLoan(approvedLoans[0].applicationReference, approvedLoans[0].id)}
               disabled={disbursingLoanRef === approvedLoans[0].applicationReference}
               className="bg-[#CAFF33] hover:bg-[#b8eb2a] text-black font-extrabold text-xs px-6 py-3 rounded-full shadow-lg transition flex items-center justify-center space-x-2 shrink-0 active:scale-95 disabled:opacity-50"
             >
@@ -614,7 +614,7 @@ export default function CustomerDashboard() {
                     <td className="p-3.5 text-right">
                       {app.status === "APPROVED" ? (
                         <button
-                          onClick={() => handleDisburseApprovedLoan(app.applicationReference)}
+                          onClick={() => handleDisburseApprovedLoan(app.applicationReference, app.id)}
                           disabled={disbursingLoanRef === app.applicationReference}
                           className="bg-[#CAFF33] hover:bg-[#b8eb2a] text-black px-3 py-1 rounded-full text-xs font-bold transition shadow active:scale-95 disabled:opacity-50 inline-flex items-center space-x-1"
                         >

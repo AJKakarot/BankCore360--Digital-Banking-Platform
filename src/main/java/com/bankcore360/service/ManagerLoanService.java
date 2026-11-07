@@ -244,6 +244,19 @@ public class ManagerLoanService {
 
         validateNotSelfReview(auth, app.getCustomer());
 
+        if (app.getStatus() == LoanStatus.DISBURSED) {
+            String creditedAccount = "3601" + String.format("%08d", app.getCustomer().getId());
+            return new DisbursementResponse(
+                    app.getApplicationReference(),
+                    app.getDisbursementReference() != null ? app.getDisbursementReference() : generateDisbursementReference(),
+                    app.getApprovedAmount() != null ? app.getApprovedAmount() : app.getRequestedAmount(),
+                    app.getDisbursedAt() != null ? app.getDisbursedAt() : LocalDateTime.now(),
+                    app.getDisbursedBy() != null ? app.getDisbursedBy() : "MANAGER",
+                    creditedAccount,
+                    app.getStatus().name()
+            );
+        }
+
         if (app.getStatus() != LoanStatus.APPROVED) {
             throw new InvalidLoanStateException("Application is in status " + app.getStatus()
                     + ". Only APPROVED loans can be disbursed.");

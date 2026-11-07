@@ -376,6 +376,19 @@ public class CustomerLoanService {
 
         validateApplicationAccess(auth, loanApp);
 
+        if (loanApp.getStatus() == LoanStatus.DISBURSED) {
+            String accNum = "3601" + String.format("%08d", loanApp.getCustomer().getId());
+            return new DisbursementResponse(
+                    loanApp.getApplicationReference(),
+                    loanApp.getDisbursementReference() != null ? loanApp.getDisbursementReference() : ("DSB-" + loanApp.getApplicationReference()),
+                    loanApp.getApprovedAmount() != null ? loanApp.getApprovedAmount() : loanApp.getRequestedAmount(),
+                    loanApp.getDisbursedAt() != null ? loanApp.getDisbursedAt() : LocalDateTime.now(),
+                    loanApp.getDisbursedBy() != null ? loanApp.getDisbursedBy() : "MANAGER",
+                    accNum,
+                    loanApp.getStatus().name()
+            );
+        }
+
         if (loanApp.getStatus() != LoanStatus.APPROVED) {
             throw new InvalidLoanStateException("Application is in status " + loanApp.getStatus()
                     + ". Only APPROVED loans can be disbursed.");
