@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -16,7 +16,9 @@ import {
   CreditCard,
   AlertTriangle,
   Zap,
-  Clock
+  Clock,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import {
   getActiveUser,
@@ -49,6 +51,8 @@ export default function CustomerDashboard() {
   const [modalRepayment, setModalRepayment] = useState<LoanRepaymentItem | null>(null);
   const [isGatewayOpen, setIsGatewayOpen] = useState(false);
   const [disbursingLoanRef, setDisbursingLoanRef] = useState<string | null>(null);
+  const [showAllRepayments, setShowAllRepayments] = useState(false);
+  const [showAllApplications, setShowAllApplications] = useState(false);
 
   const loadDashboardData = async () => {
     try {
@@ -195,6 +199,22 @@ export default function CustomerDashboard() {
   };
 
   const primaryAccount = accounts.length > 0 ? accounts[0] : null;
+
+  const sortedRepayments = useMemo(() => {
+    return [...repayments].sort((a, b) => {
+      if (a.status === "OVERDUE" && b.status !== "OVERDUE") return -1;
+      if (b.status === "OVERDUE" && a.status !== "OVERDUE") return 1;
+      return a.installmentNumber - b.installmentNumber;
+    });
+  }, [repayments]);
+
+  const displayedRepayments = useMemo(() => {
+    return showAllRepayments ? sortedRepayments : sortedRepayments.slice(0, 5);
+  }, [showAllRepayments, sortedRepayments]);
+
+  const displayedApplications = useMemo(() => {
+    return showAllApplications ? applications : applications.slice(0, 4);
+  }, [showAllApplications, applications]);
 
   return (
     <div className="bg-[#141414] text-white space-y-6 sm:space-y-8 py-4 sm:py-6 px-3.5 sm:px-6 max-w-5xl mx-auto">
@@ -457,10 +477,12 @@ export default function CustomerDashboard() {
           </div>
         )}
 
-        {/* REPAYMENTS TABLE */}
-        <div className="overflow-x-auto rounded-xl border border-[#262626]">
+        {/* REPAYMENTS TABLE WITH SLEEK SCROLLING */}
+        <div className={`overflow-x-auto rounded-xl border border-[#262626] transition-all duration-300 ${
+          showAllRepayments ? "max-h-[460px] overflow-y-auto" : ""
+        }`}>
           <table className="w-full text-left text-xs min-w-[600px]">
-            <thead className="bg-[#141414] text-neutral-400 border-b border-[#262626]">
+            <thead className="bg-[#141414] text-neutral-400 border-b border-[#262626] sticky top-0 z-10 shadow-sm">
               <tr>
                 <th className="p-3 font-semibold">Installment</th>
                 <th className="p-3 font-semibold">Due Date</th>
@@ -472,7 +494,7 @@ export default function CustomerDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#262626] text-neutral-300">
-              {repayments.map((rep) => {
+              {displayedRepayments.map((rep) => {
                 const total = rep.totalPayableAmount || rep.emiAmount + (rep.latePenaltyAmount || 0);
                 const isOverdue = rep.status === "OVERDUE";
                 const isPaid = rep.status === "PAID";
@@ -556,6 +578,34 @@ export default function CustomerDashboard() {
             </tbody>
           </table>
         </div>
+
+        {/* SEE MORE / SHOW LESS REPAYMENTS CONTROL */}
+        {sortedRepayments.length > 5 && (
+          <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 border-t border-[#262626] text-xs">
+            <div className="flex items-center space-x-2">
+              <span className="text-neutral-400 font-mono text-[11px]">
+                Showing {displayedRepayments.length} of {sortedRepayments.length} installments
+              </span>
+              {!showAllRepayments && (
+                <span className="px-2 py-0.5 rounded-full bg-[#262626] text-[#CAFF33] text-[10px] font-mono border border-[#333333]">
+                  +{sortedRepayments.length - 5} Upcoming
+                </span>
+              )}
+            </div>
+
+            <button
+              onClick={() => setShowAllRepayments((prev) => !prev)}
+              className="text-xs font-bold text-[#CAFF33] hover:text-[#b8eb2a] transition flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-[#262626] hover:bg-[#333333] border border-[#3A3A3A] hover:border-[#CAFF33] active:scale-95 shadow-sm"
+            >
+              <span>
+                {showAllRepayments
+                  ? "Show Less (Collapse)"
+                  : `See More (${sortedRepayments.length - 5} remaining) ↓`}
+              </span>
+              {showAllRepayments ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Applications Table */}
@@ -574,9 +624,11 @@ export default function CustomerDashboard() {
           </Link>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className={`overflow-x-auto transition-all duration-300 ${
+          showAllApplications ? "max-h-[380px] overflow-y-auto" : ""
+        }`}>
           <table className="w-full text-left text-xs min-w-[500px]">
-            <thead className="bg-[#141414] text-neutral-400 border-b border-[#262626]">
+            <thead className="bg-[#141414] text-neutral-400 border-b border-[#262626] sticky top-0 z-10 shadow-sm">
               <tr>
                 <th className="p-3.5 font-semibold">Reference</th>
                 <th className="p-3.5 font-semibold">Type</th>
@@ -600,7 +652,7 @@ export default function CustomerDashboard() {
                   </td>
                 </tr>
               ) : (
-                applications.map((app) => (
+                displayedApplications.map((app) => (
                   <tr key={app.id} className="hover:bg-[#222222] transition">
                     <td className="p-3.5 font-mono font-semibold text-white">{app.applicationReference}</td>
                     <td className="p-3.5 font-medium text-white">{app.loanType}</td>
@@ -636,6 +688,34 @@ export default function CustomerDashboard() {
             </tbody>
           </table>
         </div>
+
+        {/* SEE MORE / SHOW LESS APPLICATIONS CONTROL */}
+        {applications.length > 4 && (
+          <div className="p-3.5 border-t border-[#262626] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs bg-[#171717]">
+            <div className="flex items-center space-x-2">
+              <span className="text-neutral-400 font-mono text-[11px]">
+                Showing {displayedApplications.length} of {applications.length} applications
+              </span>
+              {!showAllApplications && (
+                <span className="px-2 py-0.5 rounded-full bg-[#262626] text-neutral-300 text-[10px] font-mono border border-[#333333]">
+                  +{applications.length - 4} more
+                </span>
+              )}
+            </div>
+
+            <button
+              onClick={() => setShowAllApplications((prev) => !prev)}
+              className="text-xs font-bold text-[#CAFF33] hover:text-[#b8eb2a] transition flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-[#262626] hover:bg-[#333333] border border-[#3A3A3A] hover:border-[#CAFF33] active:scale-95 shadow-sm"
+            >
+              <span>
+                {showAllApplications
+                  ? "Show Less (Collapse)"
+                  : `See More (${applications.length - 4} remaining) ↓`}
+              </span>
+              {showAllApplications ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Quick Action Cards - Distinct, Non-duplicate Actions */}
