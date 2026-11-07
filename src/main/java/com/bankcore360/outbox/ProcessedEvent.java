@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 /**
- * Idempotency tracking entity for Kafka consumers.
+ * Idempotency tracking entity for event consumer workers.
  * Prevents duplicate processing of re-delivered events.
  */
 @Entity

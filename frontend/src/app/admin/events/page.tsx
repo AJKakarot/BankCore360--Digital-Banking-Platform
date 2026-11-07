@@ -6,7 +6,6 @@ import {
   Activity,
   CheckCircle2,
   Clock,
-  AlertTriangle,
   Search,
   RefreshCw,
   Layers,
@@ -15,23 +14,21 @@ import {
   X,
   Server,
   Zap,
-  ArrowRight
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  fetchKafkaStreamStatus,
-  KafkaStreamStatus,
+  fetchEventStreamStatus,
+  EventStreamStatus,
   OutboxEventItem,
-  ProcessedEventItem,
   getActiveUser
 } from "@/lib/api";
 import { toast } from "@/components/ui/Toast";
 
-const DEMO_STATUS: KafkaStreamStatus = {
-  kafkaEnabled: true,
-  bootstrapServers: "localhost:9092",
-  topics: [
+const DEMO_STATUS: EventStreamStatus = {
+  streamEnabled: true,
+  streamEngine: "Transactional Outbox Engine (PostgreSQL)",
+  channels: [
     {
       name: "loan-events",
       consumerGroup: "bankcore360-loan-group, bankcore360-audit-group",
@@ -99,14 +96,14 @@ const DEMO_STATUS: KafkaStreamStatus = {
         aggregateId: "LN-2026-AB12CD",
         payload: {
           documentType: "PAN",
-          verifiedBy: "checker_john",
+          verifiedBy: "checker_compliance",
           status: "VERIFIED"
         }
       }, null, 2),
       status: "PUBLISHED",
       retryCount: 0,
-      createdAt: new Date(Date.now() - 2400000).toISOString(),
-      publishedAt: new Date(Date.now() - 2399000).toISOString(),
+      createdAt: new Date(Date.now() - 2800000).toISOString(),
+      publishedAt: new Date(Date.now() - 2795000).toISOString(),
     },
     {
       id: 3,
@@ -119,9 +116,10 @@ const DEMO_STATUS: KafkaStreamStatus = {
         eventType: "LOAN_APPROVED",
         aggregateId: "LN-2026-AB12CD",
         payload: {
-          approvedAmount: 250000,
-          interestRate: 10.5,
-          reviewedBy: "manager_sarah"
+          sanctionedAmount: 250000,
+          interestRate: 11.5,
+          approvedBy: "manager_credit",
+          status: "APPROVED"
         }
       }, null, 2),
       status: "PUBLISHED",
@@ -135,15 +133,15 @@ const DEMO_STATUS: KafkaStreamStatus = {
       id: 1,
       eventId: "evt-9a8b-4c21",
       eventType: "LOAN_APPLICATION_SUBMITTED",
-      consumerGroup: "bankcore360-audit-group",
+      consumerGroup: "bankcore360-loan-group",
       processedAt: new Date(Date.now() - 3597000).toISOString(),
     },
     {
       id: 2,
       eventId: "evt-77ab-90f1",
       eventType: "KYC_DOCUMENT_VERIFIED",
-      consumerGroup: "bankcore360-audit-group",
-      processedAt: new Date(Date.now() - 2398000).toISOString(),
+      consumerGroup: "bankcore360-kyc-group",
+      processedAt: new Date(Date.now() - 2794000).toISOString(),
     },
     {
       id: 3,
@@ -155,26 +153,26 @@ const DEMO_STATUS: KafkaStreamStatus = {
   ]
 };
 
-export default function AdminKafkaMonitorPage() {
+export default function AdminEventMonitorPage() {
   const router = useRouter();
-  const [data, setData] = useState<KafkaStreamStatus | null>(null);
+  const [data, setData] = useState<EventStreamStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
-  const [activeTab, setActiveTab] = useState<"outbox" | "processed" | "topics">("outbox");
+  const [activeTab, setActiveTab] = useState<"outbox" | "processed" | "channels">("outbox");
   const [selectedEvent, setSelectedEvent] = useState<OutboxEventItem | null>(null);
 
   const loadStreamStatus = async (showToast = false) => {
     setLoading(true);
     try {
-      const res = await fetchKafkaStreamStatus(50);
+      const res = await fetchEventStreamStatus(50);
       setData(res);
       if (showToast) {
-        toast.success("Stream Status Updated", `Loaded ${res.outboxEvents?.length || 0} events from Kafka Outbox`);
+        toast.success("Stream Status Updated", `Loaded ${res.outboxEvents?.length || 0} events from Outbox`);
       }
     } catch {
       setData(DEMO_STATUS);
       if (showToast) {
-        toast.info("Offline Stream Mode", "Displaying cached Kafka events");
+        toast.info("Offline Stream Mode", "Displaying cached event stream");
       }
     } finally {
       setLoading(false);
@@ -191,6 +189,7 @@ export default function AdminKafkaMonitorPage() {
   }, [router]);
 
   const streamData = data || DEMO_STATUS;
+  const channelList = streamData.channels || streamData.topics || [];
 
   const filteredOutbox = (streamData.outboxEvents || []).filter(
     (e) =>
@@ -218,19 +217,19 @@ export default function AdminKafkaMonitorPage() {
             <span>Event-Driven Architecture</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-            Kafka & Outbox Stream
+            Event Stream & Outbox
             <span
               className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${
-                streamData.kafkaEnabled
+                streamData.streamEnabled !== false
                   ? "bg-[#CAFF33]/20 text-[#CAFF33] border border-[#CAFF33]/40"
                   : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
               }`}
             >
-              {streamData.kafkaEnabled ? "Kafka: ACTIVE" : "Kafka: OFFLINE MODE"}
+              {streamData.streamEnabled !== false ? "Outbox: ACTIVE" : "Outbox: STANDBY"}
             </span>
           </h1>
           <p className="text-xs sm:text-sm text-neutral-400">
-            Real-time monitor for Transactional Outbox events, Kafka topics, and idempotent consumer workers.
+            Real-time monitor for Transactional Outbox events, domain event channels, and idempotent consumer workers.
           </p>
         </div>
 
@@ -254,16 +253,16 @@ export default function AdminKafkaMonitorPage() {
         </div>
       </div>
 
-      {/* Cluster Overview Banner */}
+      {/* Overview Banner */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-[#1C1C1C] border border-[#262626] p-5 rounded-2xl flex items-center space-x-3.5">
           <div className="w-10 h-10 rounded-xl bg-[#262626] flex items-center justify-center text-[#CAFF33]">
             <Server className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[11px] text-neutral-400 font-medium">Bootstrap Broker</div>
+            <div className="text-[11px] text-neutral-400 font-medium">Event Engine</div>
             <div className="text-sm font-mono font-bold text-white truncate max-w-[170px]">
-              {streamData.bootstrapServers || "localhost:9092"}
+              {streamData.streamEngine || "Transactional Outbox"}
             </div>
           </div>
         </div>
@@ -297,8 +296,8 @@ export default function AdminKafkaMonitorPage() {
             <Zap className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[11px] text-neutral-400 font-medium">Active Kafka Topics</div>
-            <div className="text-xl font-bold text-white">{streamData.topics?.length ?? 5} Topics</div>
+            <div className="text-[11px] text-neutral-400 font-medium">Active Channels</div>
+            <div className="text-xl font-bold text-white">{channelList.length || 5} Channels</div>
           </div>
         </div>
       </div>
@@ -330,15 +329,15 @@ export default function AdminKafkaMonitorPage() {
         </button>
 
         <button
-          onClick={() => setActiveTab("topics")}
+          onClick={() => setActiveTab("channels")}
           className={`pb-3 px-4 text-xs font-semibold flex items-center space-x-2 border-b-2 transition shrink-0 ${
-            activeTab === "topics"
+            activeTab === "channels"
               ? "border-[#CAFF33] text-[#CAFF33]"
               : "border-transparent text-neutral-400 hover:text-white"
           }`}
         >
           <Radio className="w-4 h-4" />
-          <span>Topics & Consumer Groups</span>
+          <span>Channels & Consumers</span>
         </button>
       </div>
 
@@ -352,7 +351,7 @@ export default function AdminKafkaMonitorPage() {
                 type="text"
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                placeholder="Search event ID, type, reference, topic..."
+                placeholder="Search event ID, type, reference, channel..."
                 className="w-full pl-9 pr-4 py-2 bg-[#1C1C1C] border border-[#262626] rounded-full text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-[#CAFF33]"
               />
             </div>
@@ -369,7 +368,7 @@ export default function AdminKafkaMonitorPage() {
                     <th className="py-3 px-4">Status</th>
                     <th className="py-3 px-4">Event Type</th>
                     <th className="py-3 px-4">Aggregate Ref</th>
-                    <th className="py-3 px-4">Kafka Topic</th>
+                    <th className="py-3 px-4">Channel</th>
                     <th className="py-3 px-4">Created</th>
                     <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
@@ -452,7 +451,7 @@ export default function AdminKafkaMonitorPage() {
               />
             </div>
             <div className="text-xs text-neutral-400">
-              Idempotency records guarantee that duplicate Kafka events are dropped safely.
+              Idempotency records guarantee that duplicate domain events are safely dropped.
             </div>
           </div>
 
@@ -500,20 +499,20 @@ export default function AdminKafkaMonitorPage() {
         </div>
       )}
 
-      {/* Tab Content: Topics Detail */}
-      {activeTab === "topics" && (
+      {/* Tab Content: Channels Detail */}
+      {activeTab === "channels" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {(streamData.topics || []).map((t) => (
+          {channelList.map((t) => (
             <div
               key={t.name}
               className="bg-[#1C1C1C] border border-[#262626] p-6 rounded-2xl space-y-3 shadow-lg"
             >
               <div className="flex items-center justify-between">
                 <div className="inline-flex items-center space-x-2 bg-[#262626] border border-[#333333] px-3 py-1 rounded-full text-xs font-mono font-bold text-[#CAFF33]">
-                  <span>Topic: {t.name}</span>
+                  <span>Channel: {t.name}</span>
                 </div>
                 <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono">
-                  3 Partitions
+                  Active
                 </span>
               </div>
               <p className="text-xs text-neutral-300">{t.description}</p>
@@ -535,13 +534,13 @@ export default function AdminKafkaMonitorPage() {
             <div className="flex items-center justify-between border-b border-[#262626] pb-3">
               <div className="space-y-0.5">
                 <h3 className="font-bold text-white text-base flex items-center gap-2">
-                  <span>Kafka Event Envelope</span>
+                  <span>Domain Event Envelope</span>
                   <span className="text-xs font-mono text-[#CAFF33] font-normal">
                     {selectedEvent.eventId}
                   </span>
                 </h3>
                 <div className="text-xs text-neutral-400 font-mono">
-                  Topic: {selectedEvent.topic} • Ref: {selectedEvent.aggregateId}
+                  Channel: {selectedEvent.topic} • Ref: {selectedEvent.aggregateId}
                 </div>
               </div>
               <button
@@ -577,4 +576,3 @@ export default function AdminKafkaMonitorPage() {
     </div>
   );
 }
-

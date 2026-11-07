@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Standard immutable event envelope used across all BankCore360 Kafka topics.
+ * Standard immutable event envelope used across all BankCore360 event streams.
  *
  * @param eventId     Unique event identifier for idempotency and tracing
  * @param eventType   Domain event classification type

@@ -44,10 +44,7 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     
-    # Kafka
-    KAFKA_BOOTSTRAP_SERVERS: str = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
-    KAFKA_ENABLED: bool = os.getenv("KAFKA_ENABLED", "false").lower() in ("true", "1", "yes")
-    
+
     # RAG Settings
     CHUNK_SIZE: int = 600
     CHUNK_OVERLAP: int = 80

@@ -133,5 +133,5 @@ curl -i http://localhost:8080/api/health
 - [ ] **Phase 2**: Customer & Account domain entities (Checking, Savings)
 - [ ] **Phase 3**: Double-entry ledger and money movement engine
 - [ ] **Phase 4**: Spring Security, JWT authentication & RBAC
-- [ ] **Phase 5**: Event-driven streaming with Apache Kafka
+- [x] **Phase 5**: Transactional Outbox Event Architecture with PostgreSQL Audit Trails
 - [ ] **Phase 6**: AI Financial Assistant & Transaction Enrichment

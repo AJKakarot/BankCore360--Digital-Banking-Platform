@@ -1,7 +1,7 @@
 package com.bankcore360.controller;
 
-import com.bankcore360.dto.KafkaStreamStatusResponse;
-import com.bankcore360.dto.KafkaStreamStatusResponse.TopicDetail;
+import com.bankcore360.dto.EventStreamStatusResponse;
+import com.bankcore360.dto.EventStreamStatusResponse.ChannelDetail;
 import com.bankcore360.outbox.OutboxEvent;
 import com.bankcore360.outbox.OutboxEventRepository;
 import com.bankcore360.outbox.OutboxStatus;
@@ -22,15 +22,15 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/admin/kafka")
+@RequestMapping("/api/admin/events")
 @Tag(name = "Admin Event Stream & Outbox Monitor", description = "Endpoints for inspecting transactional event streams and audit history")
 @PreAuthorize("hasRole('ADMIN')")
-public class AdminKafkaController {
+public class AdminEventStreamController {
 
     private final OutboxEventRepository outboxEventRepository;
     private final ProcessedEventRepository processedEventRepository;
 
-    public AdminKafkaController(
+    public AdminEventStreamController(
             OutboxEventRepository outboxEventRepository,
             ProcessedEventRepository processedEventRepository
     ) {
@@ -38,20 +38,20 @@ public class AdminKafkaController {
         this.processedEventRepository = processedEventRepository;
     }
 
-    @GetMapping("/events")
+    @GetMapping({"/status", "/events"})
     @Operation(summary = "Get Event stream, Outbox event records, and audit status",
             description = "Returns real-time transactional outbox records and audit history")
-    public ResponseEntity<KafkaStreamStatusResponse> getKafkaStreamStatus(
+    public ResponseEntity<EventStreamStatusResponse> getEventStreamStatus(
             @RequestParam(defaultValue = "50") int limit
     ) {
         int safeLimit = Math.min(100, Math.max(10, limit));
 
-        List<TopicDetail> topics = List.of(
-                new TopicDetail("loan-events", "Audit Pipeline", "Loan application creation, updates, and workflow changes"),
-                new TopicDetail("kyc-events", "Audit Pipeline", "Customer KYC document uploads, review, verify, and reject events"),
-                new TopicDetail("approval-events", "Audit Pipeline", "Credit manager loan approval, rejection, and sanction decisions"),
-                new TopicDetail("repayment-events", "Accounting Pipeline", "EMI repayment schedules, payments, and installment notices"),
-                new TopicDetail("notification-events", "Notification Pipeline", "Real-time user notification alerts and communications")
+        List<ChannelDetail> channels = List.of(
+                new ChannelDetail("loan-events", "Audit Pipeline", "Loan application creation, updates, and workflow changes"),
+                new ChannelDetail("kyc-events", "Audit Pipeline", "Customer KYC document uploads, review, verify, and reject events"),
+                new ChannelDetail("approval-events", "Audit Pipeline", "Credit manager loan approval, rejection, and sanction decisions"),
+                new ChannelDetail("repayment-events", "Accounting Pipeline", "EMI repayment schedules, payments, and installment notices"),
+                new ChannelDetail("notification-events", "Notification Pipeline", "Real-time user notification alerts and communications")
         );
 
         Map<String, Long> stats = new LinkedHashMap<>();
@@ -63,10 +63,10 @@ public class AdminKafkaController {
         List<OutboxEvent> outboxEvents = outboxEventRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, safeLimit));
         List<ProcessedEvent> processedEvents = processedEventRepository.findAllByOrderByProcessedAtDesc(PageRequest.of(0, safeLimit));
 
-        KafkaStreamStatusResponse response = new KafkaStreamStatusResponse(
-                false,
-                "embedded-database-stream",
-                topics,
+        EventStreamStatusResponse response = new EventStreamStatusResponse(
+                true,
+                "Transactional Outbox Engine (PostgreSQL)",
+                channels,
                 stats,
                 outboxEvents,
                 processedEvents
@@ -75,4 +75,3 @@ public class AdminKafkaController {
         return ResponseEntity.ok(response);
     }
 }
-

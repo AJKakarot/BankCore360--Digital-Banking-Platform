@@ -6,7 +6,7 @@ import { ToastContainer } from "@/components/ui/Toast";
 
 export const metadata: Metadata = {
   title: "BankCore360 — Simple Digital Loan Management Platform",
-  description: "Enterprise Digital Loan Platform featuring Maker-Checker-Manager workflow, Apache Kafka event tracking, and Grok AI Policy Assistant.",
+  description: "Enterprise Digital Loan Platform featuring Maker-Checker-Manager workflow, Transactional Event Outbox, and Grok AI Policy Assistant.",
 };
 
 export default function RootLayout({

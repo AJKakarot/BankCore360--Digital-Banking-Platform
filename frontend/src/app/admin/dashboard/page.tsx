@@ -114,14 +114,14 @@ export default function AdminDashboard() {
         </Link>
 
         <Link
-          href="/admin/kafka"
+          href="/admin/events"
           className="bg-[#1C1C1C] border border-[#262626] hover:border-[#CAFF33]/50 p-6 rounded-2xl space-y-3 transition hover:-translate-y-0.5"
         >
           <div className="w-10 h-10 rounded-xl bg-[#262626] flex items-center justify-center text-[#CAFF33]">
             <Radio className="w-5 h-5" />
           </div>
-          <h3 className="font-bold text-white text-sm">Kafka & Outbox</h3>
-          <p className="text-xs text-neutral-400">Monitor topics, outbox events, and consumer idempotency.</p>
+          <h3 className="font-bold text-white text-sm">Event Stream & Outbox</h3>
+          <p className="text-xs text-neutral-400">Monitor event channels, outbox events, and consumer idempotency.</p>
         </Link>
 
         <Link
@@ -132,7 +132,7 @@ export default function AdminDashboard() {
             <ShieldCheck className="w-5 h-5" />
           </div>
           <h3 className="font-bold text-white text-sm">Audit Trail</h3>
-          <p className="text-xs text-neutral-400">Review Kafka compliance audit events.</p>
+          <p className="text-xs text-neutral-400">Review compliance audit events.</p>
         </Link>
 
         <Link

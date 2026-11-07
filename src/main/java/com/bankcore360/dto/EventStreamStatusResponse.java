@@ -6,56 +6,56 @@ import com.bankcore360.outbox.ProcessedEvent;
 import java.util.List;
 import java.util.Map;
 
-public class KafkaStreamStatusResponse {
+public class EventStreamStatusResponse {
 
-    private boolean kafkaEnabled;
-    private String bootstrapServers;
-    private List<TopicDetail> topics;
+    private boolean streamEnabled;
+    private String streamEngine;
+    private List<ChannelDetail> channels;
     private Map<String, Long> outboxStats;
     private List<OutboxEvent> outboxEvents;
     private List<ProcessedEvent> processedEvents;
 
-    public KafkaStreamStatusResponse() {
+    public EventStreamStatusResponse() {
     }
 
-    public KafkaStreamStatusResponse(
-            boolean kafkaEnabled,
-            String bootstrapServers,
-            List<TopicDetail> topics,
+    public EventStreamStatusResponse(
+            boolean streamEnabled,
+            String streamEngine,
+            List<ChannelDetail> channels,
             Map<String, Long> outboxStats,
             List<OutboxEvent> outboxEvents,
             List<ProcessedEvent> processedEvents
     ) {
-        this.kafkaEnabled = kafkaEnabled;
-        this.bootstrapServers = bootstrapServers;
-        this.topics = topics;
+        this.streamEnabled = streamEnabled;
+        this.streamEngine = streamEngine;
+        this.channels = channels;
         this.outboxStats = outboxStats;
         this.outboxEvents = outboxEvents;
         this.processedEvents = processedEvents;
     }
 
-    public boolean isKafkaEnabled() {
-        return kafkaEnabled;
+    public boolean isStreamEnabled() {
+        return streamEnabled;
     }
 
-    public void setKafkaEnabled(boolean kafkaEnabled) {
-        this.kafkaEnabled = kafkaEnabled;
+    public void setStreamEnabled(boolean streamEnabled) {
+        this.streamEnabled = streamEnabled;
     }
 
-    public String getBootstrapServers() {
-        return bootstrapServers;
+    public String getStreamEngine() {
+        return streamEngine;
     }
 
-    public void setBootstrapServers(String bootstrapServers) {
-        this.bootstrapServers = bootstrapServers;
+    public void setStreamEngine(String streamEngine) {
+        this.streamEngine = streamEngine;
     }
 
-    public List<TopicDetail> getTopics() {
-        return topics;
+    public List<ChannelDetail> getChannels() {
+        return channels;
     }
 
-    public void setTopics(List<TopicDetail> topics) {
-        this.topics = topics;
+    public void setChannels(List<ChannelDetail> channels) {
+        this.channels = channels;
     }
 
     public Map<String, Long> getOutboxStats() {
@@ -82,15 +82,15 @@ public class KafkaStreamStatusResponse {
         this.processedEvents = processedEvents;
     }
 
-    public static class TopicDetail {
+    public static class ChannelDetail {
         private String name;
         private String consumerGroup;
         private String description;
 
-        public TopicDetail() {
+        public ChannelDetail() {
         }
 
-        public TopicDetail(String name, String consumerGroup, String description) {
+        public ChannelDetail(String name, String consumerGroup, String description) {
             this.name = name;
             this.consumerGroup = consumerGroup;
             this.description = description;
@@ -121,4 +121,3 @@ public class KafkaStreamStatusResponse {
         }
     }
 }
-

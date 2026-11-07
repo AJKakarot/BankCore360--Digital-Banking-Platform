@@ -200,7 +200,7 @@ export interface NotificationItem {
   createdAt: string;
 }
 
-export interface KafkaTopicDetail {
+export interface EventChannelDetail {
   name: string;
   consumerGroup: string;
   description: string;
@@ -228,10 +228,11 @@ export interface ProcessedEventItem {
   processedAt: string;
 }
 
-export interface KafkaStreamStatus {
-  kafkaEnabled: boolean;
-  bootstrapServers: string;
-  topics: KafkaTopicDetail[];
+export interface EventStreamStatus {
+  streamEnabled?: boolean;
+  streamEngine?: string;
+  channels?: EventChannelDetail[];
+  topics?: EventChannelDetail[];
   outboxStats: {
     totalEvents: number;
     pendingEvents: number;
@@ -960,14 +961,14 @@ export async function markAllNotificationsAsRead(): Promise<void> {
   }
 }
 
-// --- Kafka & Outbox Event Stream APIs ---
-export async function fetchKafkaStreamStatus(limit = 50): Promise<KafkaStreamStatus> {
-  const res = await fetch(`${SPRING_BOOT_API}/api/admin/kafka/events?limit=${limit}`, {
+// --- Event Stream & Outbox APIs ---
+export async function fetchEventStreamStatus(limit = 50): Promise<EventStreamStatus> {
+  const res = await fetch(`${SPRING_BOOT_API}/api/admin/events?limit=${limit}`, {
     headers: getRoleAuthHeaders("ADMIN"),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || "Failed to fetch Kafka stream events");
+    throw new Error(err.message || "Failed to fetch event stream");
   }
   return res.json();
 }

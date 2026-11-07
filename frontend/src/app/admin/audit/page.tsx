@@ -63,11 +63,11 @@ export default function AdminAuditLogsPage() {
 
         <div className="flex items-center space-x-3">
           <Link
-            href="/admin/kafka"
+            href="/admin/events"
             className="px-3.5 py-2.5 rounded-full bg-[#262626] border border-[#333333] hover:border-[#CAFF33] text-xs font-semibold text-neutral-300 hover:text-white transition flex items-center space-x-1.5"
           >
             <Radio className="w-3.5 h-3.5 text-[#CAFF33]" />
-            <span>Kafka & Outbox Stream</span>
+            <span>Event Stream & Outbox</span>
           </Link>
 
           <div className="relative">

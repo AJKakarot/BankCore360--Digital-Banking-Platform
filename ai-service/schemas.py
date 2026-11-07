@@ -164,8 +164,8 @@ class ApplicationStatusResponse(BaseModel):
     nextAction: str
     explanation: str
 
-# --- Kafka Event Envelope ---
-class AiKafkaEvent(BaseModel):
+# --- Event Envelope ---
+class AiEventEnvelope(BaseModel):
     eventId: str
     eventType: str
     aggregateId: str

@@ -36,7 +36,7 @@ const SAMPLE_NOTIFICATIONS: NotificationItem[] = [
     id: 1003,
     title: "Application Submitted",
     notificationType: "LOAN_SUBMITTED",
-    message: "Your loan application LN-2026-AB12CD of ₹2,00,000 (PERSONAL) has been submitted successfully to Kafka event pipeline.",
+    message: "Your loan application LN-2026-AB12CD of ₹2,00,000 (PERSONAL) has been submitted successfully to loan processing pipeline.",
     relatedReference: "LN-2026-AB12CD",
     readStatus: true,
     createdAt: new Date(Date.now() - 86400000).toISOString(),
