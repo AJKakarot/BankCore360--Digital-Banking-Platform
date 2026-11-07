@@ -135,6 +135,15 @@ public class LoanApplicationController {
         return ResponseEntity.ok(schedule);
     }
 
+    @PostMapping("/{applicationReference}/disburse")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MANAGER', 'ADMIN')")
+    @Operation(summary = "Disburse approved loan to operative account", description = "Transfers approved funds from Bank Vault to customer operative account and sets status to DISBURSED")
+    public ResponseEntity<DisbursementResponse> disburseLoan(@PathVariable String applicationReference,
+                                                             Authentication authentication) {
+        DisbursementResponse response = customerLoanService.disburseApprovedLoan(applicationReference, authentication);
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/{applicationReference}/repayments/{repaymentId}/pay")
     @PreAuthorize("hasRole('CUSTOMER')")
     @Operation(summary = "Simulated payment for an EMI installment", description = "Records repayment of an installment and updates outstanding balance")

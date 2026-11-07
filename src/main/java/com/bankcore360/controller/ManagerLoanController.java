@@ -33,6 +33,13 @@ public class ManagerLoanController {
         return ResponseEntity.ok(applications);
     }
 
+    @GetMapping("/loans/approved")
+    @Operation(summary = "Get approved applications ready for disbursement", description = "Returns all applications in APPROVED status")
+    public ResponseEntity<List<LoanApplicationResponse>> getApprovedApplications() {
+        List<LoanApplicationResponse> applications = managerLoanService.getApprovedApplications();
+        return ResponseEntity.ok(applications);
+    }
+
     @GetMapping("/loans/{applicationId}")
     @Operation(summary = "Get loan application details for manager review", description = "Returns full application data, customer details, and checker remarks")
     public ResponseEntity<LoanApplicationResponse> getApplicationById(@PathVariable Long applicationId,

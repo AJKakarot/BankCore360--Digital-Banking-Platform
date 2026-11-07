@@ -1108,7 +1108,7 @@ export async function fetchManagerPendingApplications(): Promise<LoanApplication
   return Array.from(map.values());
 }
 
-export async function approveManagerApplication(appId: number, data: { approvedAmount: number; interestRate: number; approvedTenureMonths: number; managerRemarks?: string }): Promise<any> {
+export async function approveManagerApplication(appId: number, data: { approvedAmount: number; interestRate: number; approvedTenureMonths: number; managerRemarks?: string; autoDisburse?: boolean }): Promise<any> {
   const res = await fetch(`${SPRING_BOOT_API}/api/manager/loans/${appId}/approve`, {
     method: "PATCH",
     headers: getRoleAuthHeaders("MANAGER"),
@@ -1130,6 +1130,60 @@ export async function rejectManagerApplication(appId: number, rejectionReason: s
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message || "Failed to reject loan");
+  }
+  return res.json();
+}
+
+export async function fetchManagerApprovedApplications(): Promise<LoanApplication[]> {
+  let serverApps: LoanApplication[] = [];
+  try {
+    const res = await fetch(`${SPRING_BOOT_API}/api/manager/loans/approved`, {
+      headers: getRoleAuthHeaders("MANAGER"),
+    });
+    if (res.ok) serverApps = await res.json();
+  } catch {
+    // Fallback
+  }
+
+  let localApps: LoanApplication[] = [];
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem("bankcore360_active_applications");
+      if (raw) {
+        localApps = JSON.parse(raw).filter((a: any) => a.status === "APPROVED");
+      }
+    } catch {}
+  }
+
+  const map = new Map<string, LoanApplication>();
+  for (const a of serverApps) map.set(a.applicationReference, a);
+  for (const a of localApps) {
+    if (!map.has(a.applicationReference)) map.set(a.applicationReference, a);
+  }
+
+  return Array.from(map.values());
+}
+
+export async function disburseManagerLoan(appId: number): Promise<any> {
+  const res = await fetch(`${SPRING_BOOT_API}/api/manager/loans/${appId}/disburse`, {
+    method: "POST",
+    headers: getRoleAuthHeaders("MANAGER"),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Failed to disburse loan funds");
+  }
+  return res.json();
+}
+
+export async function disburseCustomerLoan(reference: string): Promise<any> {
+  const res = await fetch(`${SPRING_BOOT_API}/api/loans/${encodeURIComponent(reference)}/disburse`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Failed to disburse approved loan to account");
   }
   return res.json();
 }

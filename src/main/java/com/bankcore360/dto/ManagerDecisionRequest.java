@@ -27,6 +27,8 @@ public class ManagerDecisionRequest {
     @Size(max = 2000, message = "Rejection reason cannot exceed 2000 characters")
     private String rejectionReason;
 
+    private Boolean autoDisburse;
+
     public ManagerDecisionRequest() {
     }
 
@@ -76,6 +78,14 @@ public class ManagerDecisionRequest {
 
     public void setRejectionReason(String rejectionReason) {
         this.rejectionReason = rejectionReason;
+    }
+
+    public Boolean getAutoDisburse() {
+        return autoDisburse;
+    }
+
+    public void setAutoDisburse(Boolean autoDisburse) {
+        this.autoDisburse = autoDisburse;
     }
 }
 

@@ -17,3 +17,4 @@ BankCore360 operates under the Four-Eyes Principle and strict Segregation of Dut
 The BankCore360 core system actively enforces validation boundaries:
 - A user cannot act as Checker or Manager on their own loan application.
 - All decisions, timestamped remarks, and actor identities are permanently committed to the immutable audit ledger.
+

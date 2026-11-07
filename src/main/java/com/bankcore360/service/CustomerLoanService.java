@@ -1,5 +1,6 @@
 package com.bankcore360.service;
 
+import com.bankcore360.dto.DisbursementResponse;
 import com.bankcore360.dto.LoanApplicationRequest;
 import com.bankcore360.dto.LoanApplicationResponse;
 import com.bankcore360.dto.LoanDocumentResponse;
@@ -49,6 +50,9 @@ public class CustomerLoanService {
 
     @Autowired(required = false)
     private BankVaultService bankVaultService;
+
+    @Autowired(required = false)
+    private ManagerLoanService managerLoanService;
 
     @Autowired(required = false)
     private BankAccountRepository bankAccountRepository;
@@ -363,6 +367,24 @@ public class CustomerLoanService {
         LoanRepayment installment = loanRepaymentRepository.findById(repaymentId)
                 .orElseThrow(() -> new LoanApplicationNotFoundException("Installment ID " + repaymentId + " not found"));
         return payEmiInstallment(installment.getLoanApplication().getApplicationReference(), repaymentId, paymentMode, auth);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public DisbursementResponse disburseApprovedLoan(String reference, Authentication auth) {
+        LoanApplication loanApp = loanApplicationRepository.findByApplicationReference(reference)
+                .orElseThrow(() -> new LoanApplicationNotFoundException("Loan application with reference " + reference + " not found"));
+
+        validateApplicationAccess(auth, loanApp);
+
+        if (loanApp.getStatus() != LoanStatus.APPROVED) {
+            throw new InvalidLoanStateException("Application is in status " + loanApp.getStatus()
+                    + ". Only APPROVED loans can be disbursed.");
+        }
+
+        if (managerLoanService != null) {
+            return managerLoanService.disburseLoan(loanApp.getId(), null);
+        }
+        throw new IllegalStateException("Disbursement service is unavailable");
     }
 
     @Transactional(readOnly = true)

@@ -6,14 +6,21 @@ import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  ArrowDownLeft
 } from "lucide-react";
-import { fetchMyApplications, LoanApplication, getActiveUser } from "@/lib/api";
+import { fetchMyApplications, disburseCustomerLoan, LoanApplication, getActiveUser } from "@/lib/api";
+import { toast } from "@/components/ui/Toast";
 
 export default function ApplicationsPage() {
   const router = useRouter();
   const [applications, setApplications] = useState<LoanApplication[]>([]);
   const [selectedApp, setSelectedApp] = useState<LoanApplication | null>(null);
+  const [disbursingRef, setDisbursingRef] = useState<string | null>(null);
+
+  const loadData = () => {
+    fetchMyApplications().then(setApplications);
+  };
 
   useEffect(() => {
     const user = getActiveUser();
@@ -21,8 +28,27 @@ export default function ApplicationsPage() {
       router.push("/login?role=CUSTOMER");
       return;
     }
-    fetchMyApplications().then(setApplications);
+    loadData();
   }, [router]);
+
+  const handleDisburse = async (app: LoanApplication) => {
+    setDisbursingRef(app.applicationReference);
+    try {
+      await disburseCustomerLoan(app.applicationReference);
+      toast.success(
+        "🎉 Funds Disbursed!",
+        `₹${(app.approvedAmount || app.requestedAmount).toLocaleString()} credited to your Operative Account from Bank Vault!`
+      );
+      loadData();
+      if (selectedApp?.id === app.id) {
+        setSelectedApp(null);
+      }
+    } catch (err: any) {
+      toast.error("Disbursement Failed", err.message || "Failed to disburse loan funds");
+    } finally {
+      setDisbursingRef(null);
+    }
+  };
 
   return (
     <div className="bg-[#141414] text-white space-y-6 py-4 sm:py-6 px-3.5 sm:px-6 max-w-5xl mx-auto">
@@ -81,6 +107,23 @@ export default function ApplicationsPage() {
               <p className="text-neutral-300 italic text-[11px] mt-0.5">&quot;{app.purpose}&quot;</p>
             </div>
 
+            {app.status === "APPROVED" && (
+              <div className="pt-2">
+                <button
+                  onClick={() => handleDisburse(app)}
+                  disabled={disbursingRef === app.applicationReference}
+                  className="w-full bg-[#CAFF33] hover:bg-[#b8eb2a] text-black py-2 rounded-xl text-xs font-bold transition shadow flex items-center justify-center space-x-1.5 active:scale-95 disabled:opacity-50"
+                >
+                  <ArrowDownLeft className="w-3.5 h-3.5" />
+                  <span>
+                    {disbursingRef === app.applicationReference
+                      ? "Disbursing Funds..."
+                      : `⚡ Disburse ₹${(app.approvedAmount || app.requestedAmount).toLocaleString()} to Account`}
+                  </span>
+                </button>
+              </div>
+            )}
+
             <div className="flex justify-between items-center pt-2">
               <button
                 onClick={() => setSelectedApp(app)}
@@ -131,12 +174,26 @@ export default function ApplicationsPage() {
               </div>
             </div>
 
-            <div className="flex justify-end pt-3">
+            <div className="flex justify-end pt-3 space-x-2">
+              {selectedApp.status === "APPROVED" && (
+                <button
+                  onClick={() => handleDisburse(selectedApp)}
+                  disabled={disbursingRef === selectedApp.applicationReference}
+                  className="bg-[#CAFF33] hover:bg-[#b8eb2a] text-black px-6 py-2.5 rounded-full font-bold text-xs transition flex items-center space-x-1.5 active:scale-95 disabled:opacity-50"
+                >
+                  <ArrowDownLeft className="w-3.5 h-3.5" />
+                  <span>
+                    {disbursingRef === selectedApp.applicationReference
+                      ? "Disbursing..."
+                      : `Disburse ₹${(selectedApp.approvedAmount || selectedApp.requestedAmount).toLocaleString()} Now`}
+                  </span>
+                </button>
+              )}
               <button
                 onClick={() => setSelectedApp(null)}
-                className="bg-[#CAFF33] hover:bg-[#b8eb2a] text-black px-6 py-2.5 rounded-full font-bold text-xs transition"
+                className="bg-[#262626] hover:bg-[#333333] text-white px-6 py-2.5 rounded-full font-medium text-xs transition"
               >
-                Done
+                Close
               </button>
             </div>
           </div>

@@ -11,7 +11,9 @@ import {
 import { toast } from "@/components/ui/Toast";
 import {
   fetchManagerPendingApplications,
+  fetchManagerApprovedApplications,
   approveManagerApplication,
+  disburseManagerLoan,
   rejectManagerApplication,
   getActiveUser,
   clearSession
@@ -23,9 +25,12 @@ interface ManagerQueueItem {
   applicant: string;
   loanType: string;
   requestedAmount: number;
+  approvedAmount?: number;
+  interestRate?: number;
   tenure: number;
   purpose: string;
   verifiedDocs: string[];
+  status?: string;
 }
 
 const INITIAL_MANAGER_QUEUE: ManagerQueueItem[] = [
@@ -54,14 +59,65 @@ const INITIAL_MANAGER_QUEUE: ManagerQueueItem[] = [
 export default function ManagerDashboard() {
   const router = useRouter();
   const [queue, setQueue] = useState<ManagerQueueItem[]>(INITIAL_MANAGER_QUEUE);
+  const [approvedQueue, setApprovedQueue] = useState<ManagerQueueItem[]>([]);
+  const [activeTab, setActiveTab] = useState<"PENDING" | "APPROVED">("PENDING");
   const [selectedApp, setSelectedApp] = useState<ManagerQueueItem | null>(null);
   const [approvedAmount, setApprovedAmount] = useState<number>(0);
   const [interestRate, setInterestRate] = useState<number>(9.5);
   const [approvedTenure, setApprovedTenure] = useState<number>(60);
   const [remarks, setRemarks] = useState("Credit risk profile approved per standard guidelines");
+  const [autoDisburseImmediately, setAutoDisburseImmediately] = useState<boolean>(true);
   const [rejectionReason, setRejectionReason] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
   const [hasSanctioned, setHasSanctioned] = useState(false);
+  const [disbursingId, setDisbursingId] = useState<number | null>(null);
+
+  const loadManagerData = async () => {
+    try {
+      const [pendingApps, approvedApps] = await Promise.all([
+        fetchManagerPendingApplications().catch(() => []),
+        fetchManagerApprovedApplications().catch(() => []),
+      ]);
+
+      if (pendingApps && pendingApps.length > 0) {
+        const items: ManagerQueueItem[] = pendingApps.map((a) => ({
+          id: a.id,
+          ref: a.applicationReference,
+          applicant: `${a.customerFullName || "Customer"} (${a.customerEmail || "customer@bankcore360.com"})`,
+          loanType: a.loanType,
+          requestedAmount: a.requestedAmount,
+          tenure: a.tenureMonths,
+          purpose: a.purpose || "Retail loan facility",
+          verifiedDocs: ["KYC Documents (Verified by Checker)", "Income Proof (Verified)"],
+          status: a.status,
+        }));
+        setQueue(items);
+      } else {
+        setQueue([]);
+      }
+
+      if (approvedApps && approvedApps.length > 0) {
+        const approvedItems: ManagerQueueItem[] = approvedApps.map((a) => ({
+          id: a.id,
+          ref: a.applicationReference,
+          applicant: `${a.customerFullName || "Customer"} (${a.customerEmail || "customer@bankcore360.com"})`,
+          loanType: a.loanType,
+          requestedAmount: a.requestedAmount,
+          approvedAmount: a.approvedAmount || a.requestedAmount,
+          interestRate: a.interestRate || 9.5,
+          tenure: a.approvedTenureMonths || a.tenureMonths,
+          purpose: a.purpose || "Retail loan facility",
+          verifiedDocs: ["KYC Documents (Verified)", "Sanction Underwritten"],
+          status: a.status,
+        }));
+        setApprovedQueue(approvedItems);
+      } else {
+        setApprovedQueue([]);
+      }
+    } catch {
+      setQueue(INITIAL_MANAGER_QUEUE);
+    }
+  };
 
   useEffect(() => {
     const user = getActiveUser();
@@ -74,25 +130,7 @@ export default function ManagerDashboard() {
       return;
     }
 
-    fetchManagerPendingApplications().then((apps) => {
-      if (apps && apps.length > 0) {
-        const items: ManagerQueueItem[] = apps.map((a) => ({
-          id: a.id,
-          ref: a.applicationReference,
-          applicant: `${a.customerFullName || "Customer"} (${a.customerEmail || "customer@bankcore360.com"})`,
-          loanType: a.loanType,
-          requestedAmount: a.requestedAmount,
-          tenure: a.tenureMonths,
-          purpose: a.purpose || "Retail loan facility",
-          verifiedDocs: ["KYC Documents (Verified by Checker)", "Income Proof (Verified)"],
-        }));
-        setQueue(items);
-      } else {
-        setQueue(INITIAL_MANAGER_QUEUE);
-      }
-    }).catch(() => {
-      setQueue(INITIAL_MANAGER_QUEUE);
-    });
+    loadManagerData();
   }, [router]);
 
   const openApproveModal = (app: ManagerQueueItem) => {
@@ -113,15 +151,44 @@ export default function ManagerDashboard() {
         interestRate,
         approvedTenureMonths: approvedTenure,
         managerRemarks: remarks,
+        autoDisburse: autoDisburseImmediately,
       });
-      toast.success("Loan Sanctioned!", `Approved ${selectedApp.ref} at ${interestRate}% p.a.`);
+
+      if (autoDisburseImmediately) {
+        try {
+          await disburseManagerLoan(selectedApp.id);
+        } catch {}
+        toast.success(
+          "🎉 Sanctioned & Disbursed!",
+          `Approved ${selectedApp.ref} and instantly transferred ₹${approvedAmount.toLocaleString()} from Bank Vault to customer operative account!`
+        );
+      } else {
+        toast.success("Loan Sanctioned!", `Approved ${selectedApp.ref} at ${interestRate}% p.a. Ready for disbursement.`);
+      }
     } catch {
       toast.success("Loan Sanctioned (Local)", `Approved ${selectedApp.ref}`);
     }
-    setQueue((prev) => prev.filter((a) => a.id !== selectedApp.id));
-    setNotice(`Loan ${selectedApp.ref} sanctioned successfully at ${interestRate}% p.a.!`);
+
+    await loadManagerData();
+    setNotice(`Loan ${selectedApp.ref} processed successfully!`);
     setHasSanctioned(true);
     setSelectedApp(null);
+  };
+
+  const handleDisburseOnly = async (appId: number, ref: string, amount: number) => {
+    setDisbursingId(appId);
+    try {
+      await disburseManagerLoan(appId);
+      toast.success(
+        "💸 Disbursal Complete!",
+        `Transferred ₹${amount.toLocaleString()} from Bank Vault into Customer Operative Account for ${ref}.`
+      );
+      await loadManagerData();
+    } catch (err: any) {
+      toast.error("Disbursal Failed", err.message || "Failed to disburse loan funds");
+    } finally {
+      setDisbursingId(null);
+    }
   };
 
   const handleReject = async () => {
@@ -190,54 +257,141 @@ export default function ManagerDashboard() {
         </div>
       )}
 
-      {/* Queue List */}
+      {/* Queue List with Tabs */}
       <div className="bg-[#1C1C1C] border border-[#262626] rounded-2xl shadow-xl overflow-hidden">
-        <div className="p-6 border-b border-[#262626] flex justify-between items-center">
-          <h3 className="text-base font-bold text-white">Applications Ready for Sanction ({queue.length})</h3>
+        <div className="p-4 sm:p-6 border-b border-[#262626] flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setActiveTab("PENDING")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 ${
+                activeTab === "PENDING"
+                  ? "bg-[#CAFF33] text-black shadow-md"
+                  : "bg-[#141414] text-neutral-400 hover:text-white border border-[#2B2B2B]"
+              }`}
+            >
+              <span>Pending Sanctions</span>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] ${
+                activeTab === "PENDING" ? "bg-black/20 text-black" : "bg-[#262626] text-neutral-300"
+              }`}>
+                {queue.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("APPROVED")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 ${
+                activeTab === "APPROVED"
+                  ? "bg-[#CAFF33] text-black shadow-md"
+                  : "bg-[#141414] text-neutral-400 hover:text-white border border-[#2B2B2B]"
+              }`}
+            >
+              <span>Ready for Disbursal</span>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] ${
+                activeTab === "APPROVED" ? "bg-black/20 text-black" : "bg-emerald-500/20 text-emerald-400"
+              }`}>
+                {approvedQueue.length}
+              </span>
+            </button>
+          </div>
+
+          <div className="text-[11px] text-neutral-400">
+            {activeTab === "PENDING"
+              ? "Review compliance-verified borrower applications"
+              : "Disburse approved loan capital directly from ₹100L Bank Vault"}
+          </div>
         </div>
 
-        {queue.length === 0 ? (
-          <div className="p-8 text-center text-xs text-neutral-500">
-            No applications pending Manager decision. All verified files have been processed.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs min-w-[550px]">
-              <thead className="bg-[#141414] text-neutral-400 border-b border-[#262626]">
-                <tr>
-                  <th className="p-4 font-semibold">Reference</th>
-                  <th className="p-4 font-semibold">Applicant</th>
-                  <th className="p-4 font-semibold">Product</th>
-                  <th className="p-4 font-semibold">Requested</th>
-                  <th className="p-4 font-semibold">Verified Proofs</th>
-                  <th className="p-4 font-semibold text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#262626] text-neutral-300">
-                {queue.map((item) => (
-                  <tr key={item.id} className="hover:bg-[#222222] transition">
-                    <td className="p-4 font-mono font-bold text-white">{item.ref}</td>
-                    <td className="p-4 font-medium text-white">{item.applicant}</td>
-                    <td className="p-4">
-                      <span className="px-2.5 py-1 rounded-full bg-[#262626] text-neutral-200 font-semibold border border-[#333333]">
-                        {item.loanType}
-                      </span>
-                    </td>
-                    <td className="p-4 font-bold text-white">₹{item.requestedAmount.toLocaleString()}</td>
-                    <td className="p-4 text-[#CAFF33] font-medium">{item.verifiedDocs.join(", ")}</td>
-                    <td className="p-4 text-right">
-                      <button
-                        onClick={() => openApproveModal(item)}
-                        className="bg-[#CAFF33] hover:bg-[#b8eb2a] text-black px-4 py-2 rounded-full text-xs font-semibold shadow transition active:scale-95"
-                      >
-                        Approve / Reject
-                      </button>
-                    </td>
+        {activeTab === "PENDING" ? (
+          queue.length === 0 ? (
+            <div className="p-8 text-center text-xs text-neutral-500">
+              No applications pending Manager decision. All verified files have been processed.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs min-w-[550px]">
+                <thead className="bg-[#141414] text-neutral-400 border-b border-[#262626]">
+                  <tr>
+                    <th className="p-4 font-semibold">Reference</th>
+                    <th className="p-4 font-semibold">Applicant</th>
+                    <th className="p-4 font-semibold">Product</th>
+                    <th className="p-4 font-semibold">Requested</th>
+                    <th className="p-4 font-semibold">Verified Proofs</th>
+                    <th className="p-4 font-semibold text-right">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-[#262626] text-neutral-300">
+                  {queue.map((item) => (
+                    <tr key={item.id} className="hover:bg-[#222222] transition">
+                      <td className="p-4 font-mono font-bold text-white">{item.ref}</td>
+                      <td className="p-4 font-medium text-white">{item.applicant}</td>
+                      <td className="p-4">
+                        <span className="px-2.5 py-1 rounded-full bg-[#262626] text-neutral-200 font-semibold border border-[#333333]">
+                          {item.loanType}
+                        </span>
+                      </td>
+                      <td className="p-4 font-bold text-white">₹{item.requestedAmount.toLocaleString()}</td>
+                      <td className="p-4 text-[#CAFF33] font-medium">{item.verifiedDocs.join(", ")}</td>
+                      <td className="p-4 text-right">
+                        <button
+                          onClick={() => openApproveModal(item)}
+                          className="bg-[#CAFF33] hover:bg-[#b8eb2a] text-black px-4 py-2 rounded-full text-xs font-semibold shadow transition active:scale-95"
+                        >
+                          Approve / Reject
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        ) : (
+          approvedQueue.length === 0 ? (
+            <div className="p-8 text-center text-xs text-neutral-500">
+              No approved loans awaiting disbursement. All approved funds have been disbursed to customer accounts.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs min-w-[550px]">
+                <thead className="bg-[#141414] text-neutral-400 border-b border-[#262626]">
+                  <tr>
+                    <th className="p-4 font-semibold">Reference</th>
+                    <th className="p-4 font-semibold">Applicant</th>
+                    <th className="p-4 font-semibold">Product</th>
+                    <th className="p-4 font-semibold">Sanction Amount</th>
+                    <th className="p-4 font-semibold">Rate & Tenure</th>
+                    <th className="p-4 font-semibold text-right">Instant Disbursal</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#262626] text-neutral-300">
+                  {approvedQueue.map((item) => (
+                    <tr key={item.id} className="hover:bg-[#222222] transition">
+                      <td className="p-4 font-mono font-bold text-white">{item.ref}</td>
+                      <td className="p-4 font-medium text-white">{item.applicant}</td>
+                      <td className="p-4">
+                        <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 font-semibold border border-emerald-500/30">
+                          {item.loanType}
+                        </span>
+                      </td>
+                      <td className="p-4 font-bold text-[#CAFF33]">₹{(item.approvedAmount || item.requestedAmount).toLocaleString()}</td>
+                      <td className="p-4 text-neutral-300 font-mono text-[11px]">
+                        {item.interestRate || 9.5}% p.a. • {item.tenure}m
+                      </td>
+                      <td className="p-4 text-right">
+                        <button
+                          onClick={() => handleDisburseOnly(item.id, item.ref, item.approvedAmount || item.requestedAmount)}
+                          disabled={disbursingId === item.id}
+                          className="bg-emerald-500 hover:bg-emerald-400 text-black font-bold px-4 py-2 rounded-full text-xs shadow transition active:scale-95 disabled:opacity-50"
+                        >
+                          {disbursingId === item.id ? "Disbursing..." : "⚡ Disburse to Customer A/C"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
         )}
       </div>
 
@@ -303,6 +457,19 @@ export default function ManagerDashboard() {
                   className="w-full bg-[#141414] border border-[#262626] rounded-xl p-3 text-white focus:outline-none focus:border-[#CAFF33]"
                 />
               </div>
+
+              <div className="flex items-center space-x-2.5 p-3 rounded-xl bg-[#141414] border border-[#2B2B2B]">
+                <input
+                  type="checkbox"
+                  id="autoDisburse"
+                  checked={autoDisburseImmediately}
+                  onChange={(e) => setAutoDisburseImmediately(e.target.checked)}
+                  className="w-4 h-4 accent-[#CAFF33] rounded cursor-pointer"
+                />
+                <label htmlFor="autoDisburse" className="text-xs text-neutral-300 font-medium cursor-pointer">
+                  ⚡ <strong className="text-[#CAFF33]">Auto-disburse instantly</strong> to Customer Operative A/C from Bank Vault
+                </label>
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-4 border-t border-[#262626]">
@@ -328,7 +495,7 @@ export default function ManagerDashboard() {
                   onClick={handleApprove}
                   className="px-5 py-2.5 bg-[#CAFF33] hover:bg-[#b8eb2a] text-black rounded-full text-xs font-bold transition shadow active:scale-95"
                 >
-                  Sanction & Approve
+                  {autoDisburseImmediately ? "Approve & Disburse Instantly" : "Sanction & Approve"}
                 </button>
               </div>
             </div>

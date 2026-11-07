@@ -24,6 +24,7 @@ import {
   fetchMyBankAccounts,
   fetchMyTransactions,
   fetchMyRepayments,
+  disburseCustomerLoan,
   payEmiInstallment,
   triggerOverdueAndReminders,
   LoanApplication,
@@ -47,6 +48,7 @@ export default function CustomerDashboard() {
   const [triggeringCheck, setTriggeringCheck] = useState(false);
   const [modalRepayment, setModalRepayment] = useState<LoanRepaymentItem | null>(null);
   const [isGatewayOpen, setIsGatewayOpen] = useState(false);
+  const [disbursingLoanRef, setDisbursingLoanRef] = useState<string | null>(null);
 
   const loadDashboardData = async () => {
     try {
@@ -174,6 +176,24 @@ export default function CustomerDashboard() {
     }
   };
 
+  const approvedLoans = applications.filter((a) => a.status === "APPROVED");
+
+  const handleDisburseApprovedLoan = async (ref: string) => {
+    setDisbursingLoanRef(ref);
+    try {
+      await disburseCustomerLoan(ref);
+      toast.success(
+        "🎉 Funds Disbursed to Account!",
+        `Loan amount successfully transferred from Central Bank Vault into your Operative Account.`
+      );
+      await loadDashboardData();
+    } catch (err: any) {
+      toast.error("Disbursement Failed", err.message || "Failed to disburse loan funds");
+    } finally {
+      setDisbursingLoanRef(null);
+    }
+  };
+
   const primaryAccount = accounts.length > 0 ? accounts[0] : null;
 
   return (
@@ -210,6 +230,48 @@ export default function CustomerDashboard() {
           </Link>
         </div>
       </div>
+
+      {/* APPROVED LOAN INSTANT DISBURSAL CALLOUT */}
+      {approvedLoans.length > 0 && (
+        <div className="bg-gradient-to-r from-emerald-950/60 via-[#1C1C1C] to-emerald-950/40 border border-emerald-500/60 p-5 rounded-2xl shadow-2xl space-y-3">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start space-x-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/40">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                    Sanction Approved by Credit Manager
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30">
+                    READY FOR DISBURSAL
+                  </span>
+                </div>
+                <h3 className="text-base font-bold text-white mt-1">
+                  {approvedLoans[0].loanType} Loan ({approvedLoans[0].applicationReference}) — Approved for ₹{(approvedLoans[0].approvedAmount || approvedLoans[0].requestedAmount).toLocaleString()}
+                </h3>
+                <p className="text-xs text-neutral-300 mt-0.5">
+                  Interest Rate: <strong className="text-white">{approvedLoans[0].interestRate || 9.5}% p.a.</strong> • Tenure: <strong className="text-white">{approvedLoans[0].approvedTenureMonths || approvedLoans[0].tenureMonths} Months</strong>. Funds are ready in the Bank Vault to be credited to your account.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => handleDisburseApprovedLoan(approvedLoans[0].applicationReference)}
+              disabled={disbursingLoanRef === approvedLoans[0].applicationReference}
+              className="bg-[#CAFF33] hover:bg-[#b8eb2a] text-black font-extrabold text-xs px-6 py-3 rounded-full shadow-lg transition flex items-center justify-center space-x-2 shrink-0 active:scale-95 disabled:opacity-50"
+            >
+              <ArrowDownLeft className="w-4 h-4 text-black" />
+              <span>
+                {disbursingLoanRef === approvedLoans[0].applicationReference
+                  ? "Disbursing Funds from Vault..."
+                  : `Claim & Disburse ₹${(approvedLoans[0].approvedAmount || approvedLoans[0].requestedAmount).toLocaleString()} Now`}
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* OPERATIVE ACCOUNT & LIVE DISBURSEMENT BALANCE */}
       <div className="bg-gradient-to-r from-[#1C1C1C] via-[#1F1F1F] to-[#1C1C1C] border border-[#2E2E2E] p-5 sm:p-6 rounded-2xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-5">
@@ -550,12 +612,23 @@ export default function CustomerDashboard() {
                       </span>
                     </td>
                     <td className="p-3.5 text-right">
-                      <Link
-                        href={`/customer/applications?ref=${app.applicationReference}`}
-                        className="text-xs font-semibold text-[#CAFF33] hover:underline"
-                      >
-                        Details &rarr;
-                      </Link>
+                      {app.status === "APPROVED" ? (
+                        <button
+                          onClick={() => handleDisburseApprovedLoan(app.applicationReference)}
+                          disabled={disbursingLoanRef === app.applicationReference}
+                          className="bg-[#CAFF33] hover:bg-[#b8eb2a] text-black px-3 py-1 rounded-full text-xs font-bold transition shadow active:scale-95 disabled:opacity-50 inline-flex items-center space-x-1"
+                        >
+                          <ArrowDownLeft className="w-3 h-3" />
+                          <span>{disbursingLoanRef === app.applicationReference ? "Disbursing..." : "Disburse Funds"}</span>
+                        </button>
+                      ) : (
+                        <Link
+                          href={`/customer/applications?ref=${app.applicationReference}`}
+                          className="text-xs font-semibold text-[#CAFF33] hover:underline"
+                        >
+                          Details &rarr;
+                        </Link>
+                      )}
                     </td>
                   </tr>
                 ))

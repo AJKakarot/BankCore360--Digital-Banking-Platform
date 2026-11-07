@@ -88,6 +88,14 @@ public class ManagerLoanService {
     }
 
     @Transactional(readOnly = true)
+    public List<LoanApplicationResponse> getApprovedApplications() {
+        return loanApplicationRepository.findByStatusOrderBySubmittedAtAsc(LoanStatus.APPROVED)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public LoanApplicationResponse getApplicationById(Long applicationId, Authentication auth) {
         LoanApplication app = loanApplicationRepository.findById(applicationId)
                 .orElseThrow(() -> new LoanApplicationNotFoundException("Loan application with ID " + applicationId + " not found"));
@@ -163,6 +171,11 @@ public class ManagerLoanService {
                     savedApp.getDecisionTimestamp()
             );
             outboxService.saveEvent(APPROVAL_EVENTS_TOPIC, EventEnvelope.create("LOAN_APPROVED", savedApp.getApplicationReference(), payload));
+        }
+
+        if (Boolean.TRUE.equals(request.getAutoDisburse())) {
+            disburseLoan(savedApp.getId(), auth);
+            savedApp = loanApplicationRepository.findById(savedApp.getId()).orElse(savedApp);
         }
 
         return mapToResponse(savedApp);
