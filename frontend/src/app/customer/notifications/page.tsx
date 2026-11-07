@@ -104,11 +104,11 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter((n) => !n.readStatus).length;
 
   return (
-    <div className="bg-[#141414] text-white space-y-6 py-6 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto min-h-[80vh]">
+    <div className="bg-[#141414] text-white space-y-6 py-4 sm:py-6 px-3.5 sm:px-6 lg:px-8 max-w-4xl mx-auto min-h-[80vh]">
       {/* Header */}
-      <div className="bg-[#1C1C1C] border border-[#262626] rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+      <div className="bg-[#1C1C1C] border border-[#262626] rounded-2xl p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
         <div className="space-y-1">
-          <div className="inline-flex items-center space-x-2 bg-[#262626] border border-[#333333] px-3.5 py-1 rounded-full text-xs font-semibold text-neutral-300">
+          <div className="inline-flex items-center space-x-2 bg-[#262626] border border-[#333333] px-3 py-1 rounded-full text-[11px] font-semibold text-neutral-300">
             <span className="w-2 h-2 rounded-full bg-[#CAFF33] animate-pulse"></span>
             <span>Real-time Stream</span>
             {isDemoData && (
@@ -117,7 +117,7 @@ export default function NotificationsPage() {
               </span>
             )}
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-3">
             Notifications
             {unreadCount > 0 && (
               <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#CAFF33] text-black font-semibold">

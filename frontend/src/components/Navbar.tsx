@@ -108,18 +108,18 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 bg-[#1A1A1A]/95 backdrop-blur-md border-b border-[#262626]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
         {/* Brand Logo with 4-petal Lime Icon */}
-        <Link href="/" className="flex items-center space-x-2.5 group">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center relative">
-            <svg viewBox="0 0 24 24" className="w-7 h-7 text-[#CAFF33]" fill="currentColor">
+        <Link href="/" className="flex items-center space-x-2 sm:space-x-2.5 group">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center relative">
+            <svg viewBox="0 0 24 24" className="w-6 h-6 sm:w-7 sm:h-7 text-[#CAFF33]" fill="currentColor">
               <rect x="2" y="2" width="8" height="8" rx="2" className="opacity-90" />
               <rect x="14" y="2" width="8" height="8" rx="2" className="opacity-70" />
               <rect x="2" y="14" width="8" height="8" rx="2" className="opacity-70" />
               <rect x="14" y="14" width="8" height="8" rx="2" className="opacity-90" />
             </svg>
           </div>
-          <span className="text-xl font-bold tracking-tight text-white group-hover:text-[#CAFF33] transition-colors">
+          <span className="text-lg sm:text-xl font-bold tracking-tight text-white group-hover:text-[#CAFF33] transition-colors">
             BankCore360
           </span>
         </Link>
@@ -145,11 +145,11 @@ export default function Navbar() {
         </nav>
 
         {/* Right CTA & Role Actions */}
-        <div className="flex items-center space-x-3 sm:space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4">
           {currentUser ? (
             <>
-              {/* Authenticated User Identity Badge */}
-              <div className="flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#262626] border border-[#333333] text-xs text-neutral-300">
+              {/* Authenticated User Identity Badge - hidden on mobile to avoid overcrowding */}
+              <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-[#262626] border border-[#333333] text-xs text-neutral-300">
                 <span className="w-2 h-2 rounded-full bg-[#CAFF33]"></span>
                 <span className="font-semibold text-white">{currentUser.username}</span>
                 <span className="text-[10px] text-[#CAFF33] font-bold uppercase tracking-wide">

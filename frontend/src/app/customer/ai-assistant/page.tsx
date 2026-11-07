@@ -230,21 +230,21 @@ export default function AiAssistantPage() {
   };
 
   return (
-    <div className="bg-[#141414] text-white h-[calc(100vh-80px)] flex flex-col overflow-hidden relative">
+    <div className="bg-[#141414] text-white h-[calc(100vh-64px)] sm:h-[calc(100vh-80px)] flex flex-col overflow-hidden relative">
       {/* Messages Scroll Area - ONLY this scrolls, never the page */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 min-h-0"
+        className="flex-1 overflow-y-auto px-3.5 sm:px-6 py-4 sm:py-6 min-h-0"
       >
-        <div className="max-w-3xl mx-auto space-y-6">
+        <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
           {/* Empty State / Welcome Screen */}
           {messages.length === 0 ? (
-            <div className="h-full min-h-[50vh] flex flex-col items-center justify-center text-center space-y-6 pt-12 animate-fade-in">
-              <div className="w-14 h-14 rounded-2xl bg-[#CAFF33]/15 text-[#CAFF33] flex items-center justify-center border border-[#CAFF33]/30 shadow-lg">
-                <Bot className="w-8 h-8" />
+            <div className="h-full min-h-[50vh] flex flex-col items-center justify-center text-center space-y-5 pt-8 sm:pt-12 animate-fade-in">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#CAFF33]/15 text-[#CAFF33] flex items-center justify-center border border-[#CAFF33]/30 shadow-lg">
+                <Bot className="w-7 h-7 sm:w-8 sm:h-8" />
               </div>
-              <div className="space-y-2 max-w-md">
-                <h2 className="text-2xl font-bold text-white tracking-tight">
+              <div className="space-y-1.5 max-w-md">
+                <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
                   BankCore360 AI Assistant
                 </h2>
                 <p className="text-xs text-neutral-400 leading-relaxed">

@@ -124,14 +124,11 @@ export default function CheckerDashboard() {
             };
           })
         );
-        // Put user's newly applied real loans at the very top!
-        const combined = [...items];
-        for (const fb of FALLBACK_QUEUE) {
-          if (!combined.some((c) => c.ref === fb.ref)) {
-            combined.push(fb);
-          }
+        if (items.length > 0) {
+          setQueue(items);
+        } else {
+          setQueue(FALLBACK_QUEUE);
         }
-        setQueue(combined);
       } else {
         setQueue(FALLBACK_QUEUE);
       }

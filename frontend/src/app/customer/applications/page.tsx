@@ -25,15 +25,15 @@ export default function ApplicationsPage() {
   }, [router]);
 
   return (
-    <div className="bg-[#141414] text-white space-y-6 py-6 px-4 sm:px-6 max-w-5xl mx-auto">
+    <div className="bg-[#141414] text-white space-y-6 py-4 sm:py-6 px-3.5 sm:px-6 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="bg-[#1C1C1C] border border-[#262626] rounded-3xl p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+      <div className="bg-[#1C1C1C] border border-[#262626] rounded-2xl p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
         <div className="space-y-1">
-          <div className="inline-flex items-center space-x-2 bg-[#262626] border border-[#333333] px-3.5 py-1 rounded-full text-xs font-semibold text-neutral-300">
+          <div className="inline-flex items-center space-x-2 bg-[#262626] border border-[#333333] px-3 py-1 rounded-full text-[11px] font-semibold text-neutral-300">
             <span className="w-2 h-2 rounded-full bg-[#CAFF33]"></span>
             <span>Portfolio</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">My Loan Applications</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">My Loan Applications</h1>
           <p className="text-xs sm:text-sm text-neutral-400">
             Track your submitted loans and verification status.
           </p>
@@ -41,7 +41,7 @@ export default function ApplicationsPage() {
 
         <Link
           href="/customer/apply"
-          className="bg-[#CAFF33] hover:bg-[#b8eb2a] text-black px-6 py-2.5 rounded-full font-bold text-xs shadow-md transition flex items-center space-x-1.5 self-start sm:self-auto active:scale-95"
+          className="bg-[#CAFF33] hover:bg-[#b8eb2a] text-black px-5 py-2.5 rounded-full font-bold text-xs shadow-md transition flex items-center space-x-1.5 self-start sm:self-auto active:scale-95"
         >
           <span>Apply for New Loan</span>
           <ArrowRight className="w-3.5 h-3.5" />
@@ -49,11 +49,11 @@ export default function ApplicationsPage() {
       </div>
 
       {/* Grid of Applications */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {applications.map((app) => (
           <div
             key={app.id}
-            className="bg-[#1C1C1C] border border-[#262626] hover:border-[#CAFF33]/50 rounded-2xl p-6 shadow-xl transition space-y-4"
+            className="bg-[#1C1C1C] border border-[#262626] hover:border-[#CAFF33]/50 rounded-xl p-4 sm:p-5 shadow-xl transition space-y-4"
           >
             <div className="flex justify-between items-start">
               <div>
