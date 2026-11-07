@@ -30,6 +30,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final CustomerRepository customerRepository;
 
+    @Autowired
     public AuthService(AppUserRepository appUserRepository,
                        PasswordEncoder passwordEncoder,
                        AuthenticationManager authenticationManager,
