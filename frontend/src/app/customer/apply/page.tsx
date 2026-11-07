@@ -94,14 +94,11 @@ export default function ApplyLoanPage() {
       }
       toast.dismiss(toastId);
       toast.success("Application Submitted Successfully!", `Reference ID: ${generatedRef}`);
-    } catch {
-      const fallbackRef = "LN-2026-" + Math.random().toString(36).substring(2, 8).toUpperCase();
-      setSuccessRef(fallbackRef);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("bankcore360_active_loan_ref", fallbackRef);
-      }
+    } catch (err: any) {
       toast.dismiss(toastId);
-      toast.success("Application Registered!", `Reference ID: ${fallbackRef}`);
+      const msg = err.message || "Failed to submit loan application. Please try again.";
+      setErrorMsg(msg);
+      toast.error("Application Failed", msg);
     } finally {
       setSubmitting(false);
     }

@@ -41,8 +41,8 @@ public class LoanApplicationController {
     }
 
     @PostMapping("/apply")
-    @PreAuthorize("hasRole('CUSTOMER')")
-    @Operation(summary = "Submit a new loan application", description = "Only authenticated CUSTOMER role can submit loan applications")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
+    @Operation(summary = "Submit a new loan application", description = "Authenticated CUSTOMER or ADMIN role can submit loan applications")
     public ResponseEntity<LoanApplicationResponse> applyLoan(@Valid @RequestBody LoanApplicationRequest request,
                                                              Authentication authentication) {
         LoanApplicationResponse response = customerLoanService.applyLoan(request, authentication);
@@ -50,7 +50,7 @@ public class LoanApplicationController {
     }
 
     @GetMapping("/my-applications")
-    @PreAuthorize("hasRole('CUSTOMER')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
     @Operation(summary = "View my loan applications", description = "Returns all loan applications submitted by the authenticated customer")
     public ResponseEntity<List<LoanApplicationResponse>> getMyApplications(Authentication authentication) {
         List<LoanApplicationResponse> applications = customerLoanService.getMyApplications(authentication);
@@ -67,7 +67,7 @@ public class LoanApplicationController {
     }
 
     @PostMapping(value = "/{applicationReference}/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('CUSTOMER')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
     @Operation(summary = "Upload supporting document for a loan application", description = "Customer uploads required document (PAN, Aadhaar, Income Proof, Bank Statement, etc.)")
     public ResponseEntity<LoanDocumentResponse> uploadDocument(@PathVariable String applicationReference,
                                                                @RequestParam("documentType") LoanDocumentType documentType,

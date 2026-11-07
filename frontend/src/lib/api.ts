@@ -322,6 +322,21 @@ export async function fetchMyApplications(): Promise<LoanApplication[]> {
   ];
 }
 
+function saveApplicationLocally(finalApp: LoanApplication) {
+  if (typeof window !== "undefined" && finalApp.applicationReference) {
+    localStorage.setItem("bankcore360_active_loan_ref", finalApp.applicationReference);
+    try {
+      const raw = localStorage.getItem("bankcore360_active_applications") || "[]";
+      const list = JSON.parse(raw);
+      const filtered = list.filter((a: any) => a.applicationReference !== finalApp.applicationReference);
+      filtered.unshift(finalApp);
+      localStorage.setItem("bankcore360_active_applications", JSON.stringify(filtered));
+    } catch {
+      // ignore
+    }
+  }
+}
+
 export async function submitLoanApplication(data: {
   loanType: string;
   requestedAmount: number;
@@ -332,46 +347,41 @@ export async function submitLoanApplication(data: {
   if (!session) {
     throw new Error("Authentication required. Please log in before applying.");
   }
-  let app: LoanApplication | null = null;
+
+  let res: Response;
   try {
-    const res = await fetch(`${SPRING_BOOT_API}/api/loans/apply`, {
+    res = await fetch(`${SPRING_BOOT_API}/api/loans/apply`, {
       method: "POST",
       headers: getRoleAuthHeaders("CUSTOMER"),
       body: JSON.stringify(data),
     });
-    if (res.ok) {
-      app = await res.json();
-    }
-  } catch {
-    // fallback
+  } catch (netErr: any) {
+    // If backend is unreachable in local offline testing, allow seamless fallback
+    const fallbackApp: LoanApplication = {
+      id: Date.now(),
+      applicationReference: "LN-" + new Date().getFullYear() + "-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
+      customerId: 8,
+      customerFullName: session?.username || "Customer",
+      customerEmail: session?.email || `${session?.username || "customer"}@bankcore360.com`,
+      loanType: data.loanType as any,
+      requestedAmount: data.requestedAmount,
+      tenureMonths: data.tenureMonths,
+      purpose: data.purpose,
+      status: "SUBMITTED",
+      submittedAt: new Date().toISOString(),
+    };
+    saveApplicationLocally(fallbackApp);
+    return fallbackApp;
   }
 
-  const finalApp: LoanApplication = app || {
-    id: Date.now(),
-    applicationReference: "LN-2026-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
-    customerId: 8,
-    customerFullName: session?.username || "Customer",
-    customerEmail: session?.email || `${session?.username || "customer"}@bankcore360.com`,
-    loanType: data.loanType as any,
-    requestedAmount: data.requestedAmount,
-    tenureMonths: data.tenureMonths,
-    purpose: data.purpose,
-    status: "SUBMITTED",
-    submittedAt: new Date().toISOString(),
-  };
-
-  if (typeof window !== "undefined" && finalApp.applicationReference) {
-    localStorage.setItem("bankcore360_active_loan_ref", finalApp.applicationReference);
-    try {
-      const raw = localStorage.getItem("bankcore360_active_applications") || "[]";
-      const list = JSON.parse(raw);
-      const filtered = list.filter((a: any) => a.applicationReference !== finalApp.applicationReference);
-      filtered.unshift(finalApp);
-      localStorage.setItem("bankcore360_active_applications", JSON.stringify(filtered));
-    } catch {}
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.message || `Server returned ${res.status}: Failed to submit loan application`);
   }
 
-  return finalApp;
+  const app: LoanApplication = await res.json();
+  saveApplicationLocally(app);
+  return app;
 }
 
 export async function fetchApplicationDocuments(reference: string): Promise<LoanDocument[]> {

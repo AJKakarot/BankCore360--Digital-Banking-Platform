@@ -6,9 +6,13 @@ import com.bankcore360.dto.LoginResponse;
 import com.bankcore360.dto.RegisterRequest;
 import com.bankcore360.dto.UserResponse;
 import com.bankcore360.entity.AppUser;
+import com.bankcore360.entity.Customer;
+import com.bankcore360.entity.KycStatus;
 import com.bankcore360.entity.UserRole;
 import com.bankcore360.exception.DuplicateUserException;
 import com.bankcore360.repository.AppUserRepository;
+import com.bankcore360.repository.CustomerRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -24,13 +28,22 @@ public class AuthService {
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final CustomerRepository customerRepository;
+
+    public AuthService(AppUserRepository appUserRepository,
+                       PasswordEncoder passwordEncoder,
+                       AuthenticationManager authenticationManager,
+                       @Autowired(required = false) CustomerRepository customerRepository) {
+        this.appUserRepository = appUserRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.customerRepository = customerRepository;
+    }
 
     public AuthService(AppUserRepository appUserRepository,
                        PasswordEncoder passwordEncoder,
                        AuthenticationManager authenticationManager) {
-        this.appUserRepository = appUserRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.authenticationManager = authenticationManager;
+        this(appUserRepository, passwordEncoder, authenticationManager, null);
     }
 
     @Transactional
@@ -55,6 +68,16 @@ public class AuthService {
         user.setEnabled(true);
 
         AppUser savedUser = appUserRepository.save(user);
+
+        // Auto-provision Customer profile so the user can immediately apply for loans
+        if (customerRepository != null && customerRepository.findByEmail(trimmedEmail).isEmpty()) {
+            Customer customer = new Customer();
+            customer.setFullName(trimmedUsername);
+            customer.setEmail(trimmedEmail);
+            customer.setKycStatus(KycStatus.PENDING);
+            customerRepository.save(customer);
+        }
+
         return mapToUserResponse(savedUser);
     }
 
@@ -89,6 +112,7 @@ public class AuthService {
         }
 
         AppUser user = appUserRepository.findByUsername(trimmedUsername)
+                .or(() -> appUserRepository.findByEmail(trimmedUsername.toLowerCase()))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + trimmedUsername));
 
         return new LoginResponse(

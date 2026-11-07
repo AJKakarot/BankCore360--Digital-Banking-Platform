@@ -304,6 +304,7 @@ public class CustomerLoanService {
         }
         String principal = auth.getName().trim();
 
+        // 1. Direct match by email
         if (principal.contains("@")) {
             Optional<Customer> byEmail = customerRepository.findByEmail(principal.toLowerCase());
             if (byEmail.isPresent()) {
@@ -311,7 +312,10 @@ public class CustomerLoanService {
             }
         }
 
-        Optional<AppUser> userOpt = appUserRepository.findByUsername(principal);
+        // 2. Lookup AppUser by username OR email
+        Optional<AppUser> userOpt = appUserRepository.findByUsername(principal)
+                .or(() -> appUserRepository.findByEmail(principal.toLowerCase()));
+
         if (userOpt.isPresent() && userOpt.get().getEmail() != null) {
             Optional<Customer> byUserEmail = customerRepository.findByEmail(userOpt.get().getEmail().toLowerCase());
             if (byUserEmail.isPresent()) {
@@ -319,23 +323,30 @@ public class CustomerLoanService {
             }
         }
 
+        // 3. Match against any Customer by name or email
         List<Customer> allCustomers = customerRepository.findAll();
         for (Customer c : allCustomers) {
-            if (isSamePerson(principal, c.getEmail())) {
+            if (isSamePerson(principal, c.getEmail()) || principal.equalsIgnoreCase(c.getFullName())) {
                 return c;
             }
         }
 
-        // If registered AppUser exists with CUSTOMER role but no Customer profile yet, auto-provision
-        if (userOpt.isPresent() && userOpt.get().getRole() == UserRole.CUSTOMER) {
+        // 4. Auto-provision Customer profile for authenticated user
+        if (userOpt.isPresent()) {
             Customer autoCustomer = new Customer();
             autoCustomer.setFullName(userOpt.get().getUsername());
-            autoCustomer.setEmail(userOpt.get().getEmail());
+            String email = userOpt.get().getEmail() != null ? userOpt.get().getEmail().toLowerCase() : principal.toLowerCase() + "@bankcore360.com";
+            autoCustomer.setEmail(email);
             autoCustomer.setKycStatus(KycStatus.PENDING);
             return customerRepository.save(autoCustomer);
         }
 
-        throw new CustomerNotFoundException("No customer record found matching authenticated user: " + principal);
+        // 5. Fallback auto-provision for valid authenticated principal
+        Customer autoCustomer = new Customer();
+        autoCustomer.setFullName(principal.contains("@") ? principal.substring(0, principal.indexOf('@')) : principal);
+        autoCustomer.setEmail(principal.contains("@") ? principal.toLowerCase() : principal.toLowerCase() + "@bankcore360.com");
+        autoCustomer.setKycStatus(KycStatus.PENDING);
+        return customerRepository.save(autoCustomer);
     }
 
     private void validateApplicationAccess(Authentication auth, LoanApplication application) {
