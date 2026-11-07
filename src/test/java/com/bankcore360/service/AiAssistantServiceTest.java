@@ -96,5 +96,20 @@ class AiAssistantServiceTest {
         assertThat(response.isMetadataComplete()).isTrue();
         assertThat(response.getExtractedFields()).containsEntry("detectedPanFormat", "Valid 10-digit Alphanumeric");
     }
+
+    @Test
+    @DisplayName("Should explain Maker-Checker flow and dual control principles clearly")
+    void shouldExplainMakerCheckerFlow() {
+        AiChatRequest request = new AiChatRequest("maker checker flow kya hai", "WORKFLOW");
+
+        AiChatResponse response = aiAssistantService.chat(request);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getResponse()).contains("Maker-Checker");
+        assertThat(response.getResponse()).contains("Checker");
+        assertThat(response.getResponse()).contains("Manager");
+        assertThat(response.getResponse()).contains("Four-Eyes");
+        assertThat(response.getIntent()).isEqualTo("MAKER_CHECKER_FLOW");
+    }
 }
 

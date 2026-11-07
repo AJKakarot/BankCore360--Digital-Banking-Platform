@@ -213,22 +213,40 @@ public class AiAssistantService {
             );
         }
 
-        if (msg.contains("step") || msg.contains("process") || msg.contains("workflow") || msg.contains("how")) {
+        if (msg.contains("maker") || msg.contains("checker") || msg.contains("flow") || msg.contains("dual")
+                || msg.contains("control") || msg.contains("segregation") || msg.contains("step")
+                || msg.contains("process") || msg.contains("workflow") || msg.contains("approval")
+                || msg.contains("how") || msg.contains("stage") || msg.contains("kya") || msg.contains("batao")) {
             return new AiChatResponse(
-                    "The BankCore360 Maker-Checker-Manager workflow proceeds through 5 secure stages:\n"
-                            + "1. Customer submits application with purpose, amount, and tenure.\n"
-                            + "2. Customer uploads supporting documents (PAN, Income Proof, etc.).\n"
-                            + "3. Checker inspects and verifies/rejects submitted documents with audit remarks.\n"
-                            + "4. Manager reviews verified file and approves (setting rate & tenure) or rejects.\n"
-                            + "5. Manager triggers simulated disbursement, generating your EMI schedule.",
-                    "WORKFLOW_GUIDANCE",
+                    "### 🛡️ BankCore360 Maker-Checker-Manager Dual Control Flow\n\n"
+                            + "The **Maker-Checker Flow** (also known as the *Four-Eyes Principle* or *Segregation of Duties*) is a fundamental banking governance framework. "
+                            + "It guarantees that no single person can unilaterally originate, approve, and disburse bank funds, strictly eliminating fraud, internal bias, and errors.\n\n"
+                            + "#### 👥 3 Distinct Roles & Responsibilities:\n"
+                            + "1. **The Maker (Customer / Loan Originator):**\n"
+                            + "   - Initiates the loan application with purpose, requested amount, and tenure.\n"
+                            + "   - Uploads mandatory identification & financial proofs (PAN Card, Aadhaar, 3 Months Payslips, Bank Statements).\n"
+                            + "   - Initial application state: `SUBMITTED`.\n\n"
+                            + "2. **The Checker (Compliance & KYC Verification Officer):**\n"
+                            + "   - Operates in an independent verification queue (`/checker/dashboard`).\n"
+                            + "   - Authenticates uploaded documents against KYC criteria and checks minimum ₹15,000 monthly income.\n"
+                            + "   - Marks each document as `VERIFIED` or `REJECTED` with mandatory audit remarks.\n"
+                            + "   - Cannot approve loans or disburse funds. Lifecycle state transitions: `UNDER_REVIEW` ➔ `DOCUMENTS_VERIFIED` ➔ `PENDING_MANAGER_APPROVAL`.\n\n"
+                            + "3. **The Approver / Manager (Branch Credit Sanctioning Authority):**\n"
+                            + "   - Evaluates credit risk, verified proofs, CIBIL benchmark (700+), and FOIR debt-to-income ratio (strictly ≤ 50%).\n"
+                            + "   - Holds sole sanction authority to `APPROVE` (setting final interest rate & sanctioned amount) or `REJECT` the application.\n"
+                            + "   - Authorizes atomic **Disbursement** directly from the BankCore360 ₹100 Lakh Vault to the Customer's Operative Account.\n\n"
+                            + "#### 🔐 Core Banking Safeguards:\n"
+                            + "• **Self-Review Prevention:** A user is blocked by the system from reviewing or approving their own loan.\n"
+                            + "• **Immutable Audit Trail:** Every submission, verification note, approval, and vault ledger debit is logged permanently with actor username and timestamps.",
+                    "MAKER_CHECKER_FLOW",
                     List.of(
-                            "Operational SOP: Maker-Checker-Manager Governance Framework",
-                            "Dual Control & Segregation of Duties Mandate"
+                            "Operational SOP: Maker-Checker Governance & Dual Control Policy (POL-MC-2026-V1)",
+                            "Regulatory Banking Standard: Four-Eyes Principle & Segregation of Duties Mandate"
                     ),
                     List.of(
-                            "Register or login as CUSTOMER to apply",
-                            "Track real-time progress via GET /api/loans/my-applications"
+                            "Submit an application as CUSTOMER at /customer/apply",
+                            "Review pending applications as CHECKER at /checker/dashboard",
+                            "Sanction and disburse loans as MANAGER at /manager/dashboard"
                     )
             );
         }

@@ -1,0 +1,19 @@
+BANKCORE360 MAKER-CHECKER & DUAL CONTROL GOVERNANCE POLICY
+Document ID: POL-MC-2026-V1
+Category: Maker-Checker and Governance Policy
+Version: 1.0
+Effective Date: 2026-01-01
+Status: ACTIVE
+
+1. MANDATORY GOVERNANCE DIRECTIVE
+BankCore360 operates under the Four-Eyes Principle and strict Segregation of Duties. Under no circumstances can any single user (employee or customer) initiate, verify, approve, and disburse a credit facility.
+
+2. ROLES AND RESPONSIBILITIES
+- Maker (Customer): Submits loan application, selects facility type, requested amount, tenure, and uploads required identification and financial proofs (test PAN, dummy Aadhaar, 3 months payslips, 6 months bank statement).
+- Checker (Compliance & KYC Officer): Independently inspects all documents in the verification queue. Verifies identity validity, address authenticity, and net monthly income >= ₹15,000. Rejects or verifies proofs with mandatory audit remarks. Transitions status from UNDER_REVIEW to DOCUMENTS_VERIFIED and PENDING_MANAGER_APPROVAL.
+- Approver / Manager (Credit Risk Committee): Evaluates applicant's overall risk profile, CIBIL benchmark score (700+), and FOIR debt-to-income boundary (strictly <= 50%). Holds sole approval/rejection sanction authority. Triggers atomic disbursement deducting loan principal from the Central Bank ₹100 Lakh Vault directly into the customer's operative bank account.
+
+3. CONFLICT OF INTEREST & SELF-REVIEW PREVENTION
+The BankCore360 core system actively enforces validation boundaries:
+- A user cannot act as Checker or Manager on their own loan application.
+- All decisions, timestamped remarks, and actor identities are permanently committed to the immutable audit ledger.

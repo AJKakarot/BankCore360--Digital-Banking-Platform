@@ -85,3 +85,13 @@ Category: Interest Rate Policy
   * Personal Loans: 10.50% - 14.50% per annum.
   * Business Loans: 11.00% - 15.50% per annum.
 - Manager Discretion: Authorized Branch Credit Managers may adjust interest rates within approved policy bands based on credit score and debt-to-income profile.
+
+9. MAKER-CHECKER WORKFLOW & DUAL CONTROL GOVERNANCE POLICY
+Policy ID: POL-MC-2026-V1
+Category: Maker-Checker and Governance Policy
+- Four-Eyes Regulatory Mandate: Every financial credit facility in BankCore360 strictly adheres to the Maker-Checker Principle (Dual Control & Segregation of Duties). No single officer or borrower can initiate, verify, approve, and disburse bank funds.
+- Maker (Customer / Initiator): Initiates loan application with requested amount, tenure, and purpose. Uploads mandatory identity and financial proofs (test PAN, Aadhaar, salary slips, bank statements). Initial status: SUBMITTED.
+- Checker (Compliance & KYC Verification Officer): Independently inspects all uploaded KYC and financial documents in /checker/dashboard. Validates identity, address, and minimum ₹15,000 monthly income criteria. Marks proofs as VERIFIED or REJECTED with mandatory audit remarks. Cannot approve or disburse loans. Status transitions: UNDER_REVIEW to DOCUMENTS_VERIFIED to PENDING_MANAGER_APPROVAL.
+- Approver / Manager (Branch Credit Sanctioning Authority): Evaluates overall risk, verified proofs, CIBIL benchmark (700+), and FOIR debt-to-income boundary (strictly <= 50%). Authorizes sanction approval (setting approved amount, rate, and tenure) or rejection. Triggers atomic disbursement deducting loan capital from the Central Bank ₹100 Lakh Vault directly into the customer's operative account.
+- Non-Repudiation & Audit Trail: Every maker submission, checker review, manager sanction, and vault disbursement is immutably logged with actor username, timestamp, and before/after status. Self-review or self-approval is blocked by system validation guards.
+

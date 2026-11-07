@@ -16,9 +16,9 @@ import {
 import { askAiAssistant, AiChatResponse, getActiveUser } from "@/lib/api";
 
 const SUGGESTED_QUESTIONS = [
+  { label: "Maker-Checker Flow", query: "Explain Maker-Checker flow and dual control" },
   { label: "Loan Eligibility", query: "What is the loan eligibility criteria?" },
   { label: "Education Loan Docs", query: "What documents are required for an education loan?" },
-  { label: "Maker-Checker Flow", query: "What is the document verification process and dual control?" },
   { label: "Reducing EMI", query: "How is reducing balance EMI calculated?" },
 ];
 

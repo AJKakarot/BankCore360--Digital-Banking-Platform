@@ -670,18 +670,34 @@ function generateClientAiResponse(message: string): AiChatResponse {
     };
   }
 
-  if (q.includes("step") || q.includes("process") || q.includes("workflow") || q.includes("maker") || q.includes("checker") || q.includes("manager") || q.includes("how")) {
+  if (
+    q.includes("maker") ||
+    q.includes("checker") ||
+    q.includes("flow") ||
+    q.includes("dual") ||
+    q.includes("control") ||
+    q.includes("segregation") ||
+    q.includes("step") ||
+    q.includes("process") ||
+    q.includes("workflow") ||
+    q.includes("approval") ||
+    q.includes("manager") ||
+    q.includes("stage") ||
+    q.includes("kya") ||
+    q.includes("batao") ||
+    q.includes("how")
+  ) {
     return {
-      response: `### BankCore360 Maker-Checker-Manager Lifecycle\nBankCore360 operates on strict **Dual-Control Segregation of Duties** across 5 distinct stages:\n\n1. **Customer Initiation (Stage 1):** Customer submits loan application with amount, tenure, and purpose.\n2. **Proof Upload (Stage 2):** Customer uploads required PAN, Aadhaar, and salary slips.\n3. **Compliance Verification (Stage 3 - Checker):** The **Checker** reviews documents against KYC guidelines and marks them \`VERIFIED\` or \`REJECTED\` with audit notes.\n4. **Credit Risk Sanction (Stage 4 - Manager):** The **Credit Manager** evaluates debt capacity, verifies Checker sign-offs, and grants sanction approval or rejection.\n5. **Automated Disbursement (Stage 5):** Transactional outbox triggers event streams, schedules EMIs, and notifies the applicant.`,
-      intent: "WORKFLOW_GUIDANCE",
+      response: `### 🛡️ BankCore360 Maker-Checker-Manager Dual Control Flow\n\nThe **Maker-Checker Flow** (also known as the *Four-Eyes Principle* or *Segregation of Duties*) is a foundational banking regulatory framework. It mandates that no single individual can unilaterally originate, verify, approve, and disburse credit facilities, strictly preventing fraud, collusion, and underwriting errors.\n\n#### 👥 3 Distinct Roles & Responsibilities:\n1. **The Maker (Customer / Originator):**\n   - Initiates the loan application with purpose, requested amount, and tenure.\n   - Uploads mandatory identification & financial proofs (PAN Card, Aadhaar, 3 Months Payslips, Bank Statements).\n   - Initial application state: \`SUBMITTED\`.\n\n2. **The Checker (Compliance & KYC Verification Officer):**\n   - Operates in an independent verification queue (\`/checker/dashboard\`).\n   - Authenticates uploaded documents against KYC criteria and verifies the minimum ₹15,000 monthly income threshold.\n   - Marks each document as \`VERIFIED\` or \`REJECTED\` with mandatory audit remarks.\n   - Cannot approve loans or disburse funds. Lifecycle state transitions: \`UNDER_REVIEW\` ➔ \`DOCUMENTS_VERIFIED\` ➔ \`PENDING_MANAGER_APPROVAL\`.\n\n3. **The Approver / Manager (Branch Credit Sanctioning Authority):**\n   - Evaluates credit risk, verified proofs, CIBIL benchmark (700+), and FOIR debt-to-income ratio (strictly ≤ 50%).\n   - Holds sole sanction authority to \`APPROVE\` (setting final interest rate & sanctioned amount) or \`REJECT\` the application.\n   - Authorizes atomic **Disbursement** directly from the BankCore360 ₹100 Lakh Vault to the Customer's Operative Account.\n\n#### 🔐 Core Banking Safeguards:\n* **Self-Review Prevention:** A user is blocked by the system from reviewing or approving their own loan.\n* **Immutable Audit Trail:** Every submission, verification note, approval, and vault ledger debit is logged permanently with actor username and timestamps.`,
+      intent: "MAKER_CHECKER_FLOW",
       relevantPolicies: [
-        "Operational SOP: Maker-Checker Governance Framework",
-        "Dual Control & Segregation of Duties Mandate"
+        "Operational SOP: Maker-Checker Governance & Dual Control Policy (POL-MC-2026-V1)",
+        "Regulatory Banking Standard: Four-Eyes Principle & Segregation of Duties Mandate"
       ],
       suggestedNextSteps: [
-        "Submit Application as Customer",
-        "Experience Checker Review Queue",
-        "Experience Manager Sanction Queue"
+        "Submit Application as Customer (/customer/apply)",
+        "Experience Checker Review Queue (/checker/dashboard)",
+        "Experience Manager Sanction Queue (/manager/dashboard)"
       ],
       disclaimer: "No single user can both create and approve their own loan facility."
     };
