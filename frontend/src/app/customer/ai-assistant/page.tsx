@@ -142,14 +142,14 @@ export default function AiAssistantPage() {
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [inputQuery, setInputQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
     const user = getActiveUser();
-    if (!user) {
-      router.push("/login?role=CUSTOMER");
-      return;
+    if (user) {
+      setCurrentUser(user);
     }
-  }, [router]);
+  }, []);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);

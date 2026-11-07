@@ -4,6 +4,17 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Allow public access to AI Assistant and Loan Products/Calculator
+  if (pathname === "/customer/ai-assistant" || pathname.startsWith("/customer/ai-assistant")) {
+    return NextResponse.next();
+  }
+  if (pathname === "/customer/apply") {
+    const userCookie = request.cookies.get("bankcore360_user");
+    if (!userCookie) {
+      return NextResponse.next();
+    }
+  }
+
   // Protected route prefixes
   const isCustomerRoute = pathname.startsWith("/customer");
   const isCheckerRoute = pathname.startsWith("/checker");
