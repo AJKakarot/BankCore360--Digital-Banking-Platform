@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Search, RefreshCw } from "lucide-react";
-import { fetchAdminApplications, LoanApplication } from "@/lib/api";
+import { fetchAdminApplications, LoanApplication, getActiveUser } from "@/lib/api";
 
 const INITIAL_APPLICATIONS: LoanApplication[] = [
   { id: 101, applicationReference: "LN-2026-AB12CD", customerFullName: "John Doe", customerEmail: "john@example.com", loanType: "PERSONAL", requestedAmount: 200000, tenureMonths: 24, purpose: "Home renovation", status: "UNDER_REVIEW", submittedAt: "2026-11-06T10:00:00Z" },
@@ -11,6 +12,7 @@ const INITIAL_APPLICATIONS: LoanApplication[] = [
 ];
 
 export default function AdminApplicationsPage() {
+  const router = useRouter();
   const [applications, setApplications] = useState<LoanApplication[]>(INITIAL_APPLICATIONS);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState("");
@@ -30,8 +32,13 @@ export default function AdminApplicationsPage() {
   };
 
   useEffect(() => {
+    const user = getActiveUser();
+    if (!user || user.role !== "ADMIN") {
+      router.push("/login?role=ADMIN");
+      return;
+    }
     loadApplications();
-  }, []);
+  }, [router]);
 
   const filtered = applications.filter(
     (a) =>

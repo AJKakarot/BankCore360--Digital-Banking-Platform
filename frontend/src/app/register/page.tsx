@@ -34,30 +34,12 @@ export default function RegisterPage() {
     try {
       await registerCustomer(formData);
       setSuccess(true);
-      const session: UserSession = {
-        username: formData.username.trim(),
-        role: "CUSTOMER",
-        email: formData.email.trim()
-      };
-      saveSession(session);
       setTimeout(() => {
-        router.push("/customer/dashboard");
-      }, 1200);
+        router.push("/login?registered=true&role=CUSTOMER");
+      }, 1500);
     } catch (err: any) {
-      if (err.message && err.message.includes("failed")) {
-        setErrorMsg(err.message);
-        setLoading(false);
-      } else {
-        setSuccess(true);
-        saveSession({
-          username: formData.username.trim() || "new_customer",
-          role: "CUSTOMER",
-          email: formData.email.trim() || "customer@bankcore360.com"
-        });
-        setTimeout(() => {
-          router.push("/customer/dashboard");
-        }, 1200);
-      }
+      setErrorMsg(err.message || "Registration failed. Please check backend connection and credentials.");
+      setLoading(false);
     }
   };
 

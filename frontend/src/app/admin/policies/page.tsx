@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Upload,
   CheckCircle2,
@@ -9,6 +10,7 @@ import {
   Paperclip
 } from "lucide-react";
 import { toast } from "@/components/ui/Toast";
+import { getActiveUser } from "@/lib/api";
 
 interface PolicyItem {
   id: number;
@@ -46,6 +48,7 @@ const CATEGORIES = [
 ];
 
 export default function AdminPoliciesPage() {
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [policies, setPolicies] = useState<PolicyItem[]>(INITIAL_POLICIES);
   const [title, setTitle] = useState("");
@@ -53,6 +56,14 @@ export default function AdminPoliciesPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    const user = getActiveUser();
+    if (!user || user.role !== "ADMIN") {
+      router.push("/login?role=ADMIN");
+      return;
+    }
+  }, [router]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {

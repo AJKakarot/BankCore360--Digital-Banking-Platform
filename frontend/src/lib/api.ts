@@ -17,7 +17,7 @@ export interface UserSession {
   password?: string;
 }
 
-// Session Management via LocalStorage
+// Session Management via LocalStorage & Cookies
 export function getActiveUser(): UserSession | null {
   if (typeof window === "undefined") return null;
   const stored = localStorage.getItem("bankcore360_user");
@@ -29,62 +29,36 @@ export function getActiveUser(): UserSession | null {
   }
 }
 
-export function getSavedSession(): UserSession {
-  if (typeof window === "undefined") {
-    return { username: "dev_customer", role: "CUSTOMER", email: "customer@bankcore360.com" };
-  }
-  const stored = localStorage.getItem("bankcore360_user");
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      // Fallback
-    }
-  }
-  return { username: "dev_customer", role: "CUSTOMER", email: "customer@bankcore360.com" };
-}
-
 export function saveSession(user: UserSession): void {
   if (typeof window !== "undefined") {
     localStorage.setItem("bankcore360_user", JSON.stringify(user));
+    // Set cookie for Next.js middleware route protection
+    document.cookie = `bankcore360_user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=86400; SameSite=Lax`;
   }
 }
 
 export function clearSession(): void {
   if (typeof window !== "undefined") {
     localStorage.removeItem("bankcore360_user");
+    document.cookie = "bankcore360_user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
   }
 }
 
-export function getRoleAuthHeaders(requiredRole?: RoleType): HeadersInit {
-  const session = getSavedSession();
-  let username = session.username;
-  let password = session.password || "Password@123";
+export function getSavedSession(): UserSession | null {
+  return getActiveUser();
+}
 
-  // Ensure role-specific credentials so staff endpoints never hit 403 Forbidden
-  if (requiredRole === "CHECKER") {
-    if (session.role !== "CHECKER" && session.role !== "MANAGER" && session.role !== "ADMIN") {
-      username = "dev_checker";
-      password = "Password@123";
-    }
-  } else if (requiredRole === "MANAGER") {
-    if (session.role !== "MANAGER" && session.role !== "ADMIN") {
-      username = "dev_manager";
-      password = "Password@123";
-    }
-  } else if (requiredRole === "ADMIN") {
-    if (session.role !== "ADMIN") {
-      username = "dev_admin";
-      password = "Password@123";
-    }
-  } else if (requiredRole === "CUSTOMER") {
-    if (!username || username === "dev_checker" || username === "dev_manager" || username === "dev_admin") {
-      username = "dev_customer";
-      password = "Password@123";
-    }
+export function getAuthHeaders(): HeadersInit {
+  const session = getActiveUser();
+  if (!session || !session.username) {
+    return {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    };
   }
 
-  const credentials = btoa(`${username}:${password}`);
+  const password = session.password || "Password@123";
+  const credentials = btoa(`${session.username}:${password}`);
   return {
     "Content-Type": "application/json",
     "Accept": "application/json",
@@ -92,75 +66,53 @@ export function getRoleAuthHeaders(requiredRole?: RoleType): HeadersInit {
   };
 }
 
-export function getAuthHeaders(): HeadersInit {
-  return getRoleAuthHeaders();
+export function getRoleAuthHeaders(requiredRole?: RoleType): HeadersInit {
+  return getAuthHeaders();
 }
 
 export async function loginUser(username: string, password: string): Promise<UserSession> {
   const cleanUsername = username.trim();
+  const cleanPassword = password.trim();
 
-  // Check if role has been overridden by Admin in local storage
-  let targetRole: RoleType | null = null;
-  if (typeof window !== "undefined") {
-    try {
-      const roleOverrides: Record<string, string> = JSON.parse(localStorage.getItem("bankcore360_user_roles") || "{}");
-      if (roleOverrides[cleanUsername]) {
-        targetRole = roleOverrides[cleanUsername] as RoleType;
-      } else {
-        const localSignups: any[] = JSON.parse(localStorage.getItem("bankcore360_registered_users") || "[]");
-        const found = localSignups.find((u) => u.username.toLowerCase() === cleanUsername.toLowerCase());
-        if (found) {
-          targetRole = found.role as RoleType;
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }
-
+  let res: Response;
   try {
-    const res = await fetch(`${SPRING_BOOT_API}/api/auth/login`, {
+    res = await fetch(`${SPRING_BOOT_API}/api/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Accept": "application/json",
       },
-      body: JSON.stringify({ username: cleanUsername, password }),
+      body: JSON.stringify({ username: cleanUsername, password: cleanPassword }),
     });
-    if (res.ok) {
-      const data = await res.json();
-      const session: UserSession = {
-        username: data.username || cleanUsername,
-        role: targetRole || data.role || "CUSTOMER",
-        email: data.email || `${cleanUsername}@bankcore360.com`,
-      };
-      saveSession(session);
-      return session;
+  } catch (netErr: any) {
+    throw new Error(
+      `Cannot connect to BankCore360 backend at ${SPRING_BOOT_API}. Please ensure the backend is running and reachable.`
+    );
+  }
+
+  if (!res.ok) {
+    let errMessage = "Invalid credentials. User not found in database or password incorrect.";
+    try {
+      const errData = await res.json();
+      if (errData.message) {
+        errMessage = errData.message;
+      }
+    } catch {
+      // ignore
     }
-  } catch {
-    // Network / offline
+    throw new Error(errMessage);
   }
 
-  // Graceful fallback for dev demo personas or local signups
-  const isDevUser = cleanUsername.toLowerCase().startsWith("dev_");
-  if (isDevUser || targetRole || password === "Password@123" || password === "devPassword123!") {
-    const inferredRole: RoleType =
-      targetRole
-      || (cleanUsername.toLowerCase().includes("checker") ? "CHECKER"
-      : cleanUsername.toLowerCase().includes("manager") ? "MANAGER"
-      : cleanUsername.toLowerCase().includes("admin") ? "ADMIN"
-      : "CUSTOMER");
+  const data = await res.json();
+  const session: UserSession = {
+    username: data.username || cleanUsername,
+    role: (data.role as RoleType) || "CUSTOMER",
+    email: data.email || `${cleanUsername}@bankcore360.com`,
+    password: cleanPassword, // Stored to authenticate subsequent API calls with HTTP Basic
+  };
 
-    const fallbackSession: UserSession = {
-      username: cleanUsername,
-      role: inferredRole,
-      email: `${cleanUsername}@bankcore360.com`,
-    };
-    saveSession(fallbackSession);
-    return fallbackSession;
-  }
-
-  throw new Error("Bad credentials. Please check your username and password.");
+  saveSession(session);
+  return session;
 }
 
 export async function registerCustomer(data: {
@@ -170,44 +122,29 @@ export async function registerCustomer(data: {
   fullName: string;
   phoneNumber?: string;
 }): Promise<any> {
-  // Always record locally so newly signed-up users are immediately visible in Admin panel
-  if (typeof window !== "undefined") {
-    try {
-      const existing = JSON.parse(localStorage.getItem("bankcore360_registered_users") || "[]");
-      const cleanUsername = data.username.trim();
-      const cleanEmail = data.email.trim();
-      const filtered = existing.filter((u: any) => u.username !== cleanUsername);
-      filtered.push({
-        id: Date.now(),
-        username: cleanUsername,
-        email: cleanEmail,
-        fullName: data.fullName,
-        role: "CUSTOMER",
-        enabled: true,
-        createdAt: new Date().toISOString().split("T")[0],
-        isNewSignup: true
-      });
-      localStorage.setItem("bankcore360_registered_users", JSON.stringify(filtered));
-    } catch {
-      // ignore
-    }
+  let res: Response;
+  try {
+    res = await fetch(`${SPRING_BOOT_API}/api/auth/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        username: data.username.trim(),
+        email: data.email.trim(),
+        password: data.password.trim(),
+        fullName: data.fullName.trim(),
+        phoneNumber: data.phoneNumber?.trim() || "9876543210",
+        roles: ["CUSTOMER"],
+      }),
+    });
+  } catch (err: any) {
+    throw new Error(
+      `Cannot connect to BankCore360 backend at ${SPRING_BOOT_API}. Account creation requires an active backend database.`
+    );
   }
 
-  const res = await fetch(`${SPRING_BOOT_API}/api/auth/register`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-    },
-    body: JSON.stringify({
-      username: data.username,
-      email: data.email,
-      password: data.password,
-      fullName: data.fullName,
-      phoneNumber: data.phoneNumber || "9876543210",
-      roles: ["CUSTOMER"],
-    }),
-  });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message || "Registration failed. Username or email may already be in use.");
@@ -391,6 +328,9 @@ export async function submitLoanApplication(data: {
   purpose: string;
 }): Promise<LoanApplication> {
   const session = getSavedSession();
+  if (!session) {
+    throw new Error("Authentication required. Please log in before applying.");
+  }
   let app: LoanApplication | null = null;
   try {
     const res = await fetch(`${SPRING_BOOT_API}/api/loans/apply`, {
@@ -409,8 +349,8 @@ export async function submitLoanApplication(data: {
     id: Date.now(),
     applicationReference: "LN-2026-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
     customerId: 8,
-    customerFullName: session.username || "Customer",
-    customerEmail: session.email || `${session.username || "customer"}@bankcore360.com`,
+    customerFullName: session?.username || "Customer",
+    customerEmail: session?.email || `${session?.username || "customer"}@bankcore360.com`,
     loanType: data.loanType as any,
     requestedAmount: data.requestedAmount,
     tenureMonths: data.tenureMonths,
@@ -511,11 +451,9 @@ export async function uploadLoanDocument(
 
   let createdDoc: LoanDocument | null = null;
   try {
-    let customerUser = session.username;
-    if (!customerUser || customerUser.includes("checker") || customerUser.includes("manager") || customerUser.includes("admin")) {
-      customerUser = "dev_customer";
-    }
-    const credentials = btoa(`${customerUser}:Password@123`);
+    const customerUser = session?.username || "dev_customer";
+    const password = session?.password || "Password@123";
+    const credentials = btoa(`${customerUser}:${password}`);
     const res = await fetch(`${SPRING_BOOT_API}/api/loans/${encodeURIComponent(reference)}/documents`, {
       method: "POST",
       headers: {

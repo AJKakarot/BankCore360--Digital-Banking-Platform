@@ -143,8 +143,17 @@ export default function CheckerDashboard() {
   }, []);
 
   useEffect(() => {
+    const user = getActiveUser();
+    if (!user) {
+      router.push("/login?role=CHECKER");
+      return;
+    }
+    if (user.role !== "CHECKER" && user.role !== "ADMIN") {
+      router.push("/login?role=CHECKER");
+      return;
+    }
     loadQueue();
-  }, [loadQueue]);
+  }, [loadQueue, router]);
 
   const handleVerifyDoc = async (docId: number) => {
     try {

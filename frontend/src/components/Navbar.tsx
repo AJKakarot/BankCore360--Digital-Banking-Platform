@@ -4,9 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  ChevronDown,
   LogOut,
-  User,
   LayoutDashboard,
   Bell,
   Menu,
@@ -15,7 +13,6 @@ import {
 import {
   getActiveUser,
   clearSession,
-  saveSession,
   UserSession,
   fetchUnreadNotificationCount,
   fetchNotifications,
@@ -27,7 +24,6 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<UserSession | null>(null);
-  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -37,7 +33,6 @@ export default function Navbar() {
 
   useEffect(() => {
     setMobileMenuOpen(false);
-    setRoleDropdownOpen(false);
     const user = getActiveUser();
     setCurrentUser(user);
     if (user?.role === "CUSTOMER") {
@@ -98,23 +93,6 @@ export default function Navbar() {
     return () => clearInterval(interval);
   }, [currentUser]);
 
-  const switchRole = (role: "CUSTOMER" | "CHECKER" | "MANAGER" | "ADMIN") => {
-    const newSession: UserSession = {
-      username: `dev_${role.toLowerCase()}`,
-      role,
-      email: `${role.toLowerCase()}@bankcore360.com`
-    };
-    saveSession(newSession);
-    setCurrentUser(newSession);
-    setRoleDropdownOpen(false);
-    toast.info("Persona Switched", `Switched active role to ${role}`);
-
-    if (role === "CUSTOMER") router.push("/customer/dashboard");
-    else if (role === "CHECKER") router.push("/checker/dashboard");
-    else if (role === "MANAGER") router.push("/manager/dashboard");
-    else if (role === "ADMIN") router.push("/admin/dashboard");
-  };
-
   const handleLogout = () => {
     clearSession();
     setCurrentUser(null);
@@ -170,37 +148,13 @@ export default function Navbar() {
         <div className="flex items-center space-x-3 sm:space-x-4">
           {currentUser ? (
             <>
-              {/* Active Role Badge & Quick Switcher */}
-              <div className="relative">
-                <button
-                  onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-                  className="flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#262626] border border-[#333333] text-xs text-neutral-300 hover:text-white transition"
-                  title="Switch Persona"
-                >
-                  <span className="w-2 h-2 rounded-full bg-[#CAFF33]"></span>
-                  <span className="font-semibold text-white">{currentUser.role}</span>
-                  <ChevronDown className="w-3.5 h-3.5 text-neutral-400" />
-                </button>
-
-                {roleDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 rounded-xl bg-[#1C1C1C] border border-[#2B2B2B] shadow-2xl py-2 z-50 text-xs animate-fade-in">
-                    <div className="px-3 py-1.5 text-[10px] text-neutral-400 font-semibold uppercase tracking-wider border-b border-[#262626]">
-                      Switch Persona:
-                    </div>
-                    {(["CUSTOMER", "CHECKER", "MANAGER", "ADMIN"] as const).map((r) => (
-                      <button
-                        key={r}
-                        onClick={() => switchRole(r)}
-                        className={`w-full text-left px-3 py-2 flex items-center justify-between hover:bg-[#262626] transition ${
-                          currentUser.role === r ? "text-[#CAFF33] font-bold" : "text-neutral-300"
-                        }`}
-                      >
-                        <span>{r}</span>
-                        {currentUser.role === r && <span className="text-[10px] text-[#CAFF33]">Active</span>}
-                      </button>
-                    ))}
-                  </div>
-                )}
+              {/* Authenticated User Identity Badge */}
+              <div className="flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#262626] border border-[#333333] text-xs text-neutral-300">
+                <span className="w-2 h-2 rounded-full bg-[#CAFF33]"></span>
+                <span className="font-semibold text-white">{currentUser.username}</span>
+                <span className="text-[10px] text-[#CAFF33] font-bold uppercase tracking-wide">
+                  [{currentUser.role}]
+                </span>
               </div>
 
               {/* Notifications Icon for Customers */}
@@ -239,33 +193,34 @@ export default function Navbar() {
               {/* Logout Button */}
               <button
                 onClick={handleLogout}
-                className="hidden sm:inline-flex p-2 rounded-full bg-[#262626] hover:bg-red-950/60 text-neutral-400 hover:text-red-400 border border-[#333333] transition"
+                className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-[#262626] hover:bg-red-950/60 text-neutral-400 hover:text-red-400 border border-[#333333] transition text-xs font-medium"
                 title="Log out"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out</span>
               </button>
             </>
           ) : (
             <>
               <Link
-                href="/register"
-                className="hidden sm:inline-block text-sm font-medium text-neutral-300 hover:text-white transition"
+                href="/login"
+                className="text-xs sm:text-sm font-medium text-white hover:text-[#CAFF33] px-3 py-2 transition"
               >
-                Sign Up
+                Sign In
               </Link>
               <Link
-                href="/login"
-                className="inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-2.5 rounded-full bg-[#CAFF33] hover:bg-[#b8eb2a] text-black font-semibold text-xs sm:text-sm transition-all shadow-md active:scale-95"
+                href="/register"
+                className="text-xs sm:text-sm font-semibold bg-[#CAFF33] text-black hover:bg-[#B8F020] px-4 py-2 sm:px-5 sm:py-2.5 rounded-full transition shadow-lg shadow-[#CAFF33]/10"
               >
-                Login
+                Open Account
               </Link>
             </>
           )}
 
-          {/* Mobile Hamburger Button */}
+          {/* Mobile Hamburger Toggle Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-xl bg-[#262626] border border-[#333333] text-neutral-300 hover:text-white transition ml-1"
+            className="md:hidden p-2 rounded-xl bg-[#262626] text-neutral-300 hover:text-white border border-[#333333] focus:outline-none"
             aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5 text-[#CAFF33]" /> : <Menu className="w-5 h-5" />}
@@ -273,27 +228,42 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Menu Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#1A1A1A] border-b border-[#262626] px-4 py-5 space-y-4 shadow-2xl animate-fade-in">
-          <nav className="flex flex-col space-y-2">
-            {navLinks.map((link) => {
-              const isActive = pathname === link.href;
-              return (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${
-                    isActive
-                      ? "bg-[#262626] text-[#CAFF33]"
-                      : "text-neutral-300 hover:bg-[#222222] hover:text-white"
-                  }`}
-                >
-                  {link.name}
-                </Link>
-              );
-            })}
+        <div className="md:hidden border-t border-[#262626] bg-[#1A1A1A] px-4 pt-3 pb-6 space-y-4 animate-fade-in shadow-2xl">
+          {currentUser && (
+            <div className="p-3 rounded-2xl bg-[#222222] border border-[#2D2D2D] flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-full bg-[#CAFF33]/20 flex items-center justify-center text-[#CAFF33] font-bold text-xs">
+                  {currentUser.username.substring(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">{currentUser.username}</div>
+                  <div className="text-[10px] text-neutral-400">{currentUser.email}</div>
+                </div>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#CAFF33]/15 text-[#CAFF33] border border-[#CAFF33]/30">
+                {currentUser.role}
+              </span>
+            </div>
+          )}
+
+          <nav className="flex flex-col space-y-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${
+                  pathname === link.href
+                    ? "bg-[#262626] text-[#CAFF33]"
+                    : "text-neutral-300 hover:bg-[#222222] hover:text-white"
+                }`}
+              >
+                {link.name}
+              </Link>
+            ))}
+
             {currentUser && (
               <Link
                 href={
@@ -306,7 +276,7 @@ export default function Navbar() {
                     : "/admin/dashboard"
                 }
                 onClick={() => setMobileMenuOpen(false)}
-                className="px-3.5 py-2.5 rounded-xl text-sm font-semibold text-neutral-300 hover:bg-[#222222] hover:text-white flex items-center space-x-2"
+                className="px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#CAFF33] hover:bg-[#222222] flex items-center space-x-2"
               >
                 <LayoutDashboard className="w-4 h-4 text-[#CAFF33]" />
                 <span>Dashboard ({currentUser.role})</span>
@@ -331,31 +301,6 @@ export default function Navbar() {
             )}
           </nav>
 
-          {/* Mobile Persona Switcher */}
-          <div className="pt-3 border-t border-[#262626] space-y-2">
-            <div className="text-[10px] text-neutral-400 uppercase tracking-wider font-semibold">
-              Switch Persona:
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {(["CUSTOMER", "CHECKER", "MANAGER", "ADMIN"] as const).map((r) => (
-                <button
-                  key={r}
-                  onClick={() => {
-                    switchRole(r);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`px-3 py-2 rounded-xl text-xs font-semibold border transition text-center ${
-                    currentUser?.role === r
-                      ? "bg-[#CAFF33]/20 border-[#CAFF33] text-[#CAFF33]"
-                      : "bg-[#262626] border-[#333333] text-neutral-300 hover:text-white"
-                  }`}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Mobile Auth Actions */}
           <div className="pt-3 border-t border-[#262626]">
             {currentUser ? (
@@ -367,7 +312,7 @@ export default function Navbar() {
                 className="w-full py-2.5 rounded-full bg-[#262626] hover:bg-red-950/60 text-red-400 font-semibold text-xs border border-[#333333] transition flex items-center justify-center space-x-2"
               >
                 <LogOut className="w-4 h-4" />
-                <span>Log Out ({currentUser.username})</span>
+                <span>Sign Out ({currentUser.username})</span>
               </button>
             ) : (
               <div className="grid grid-cols-2 gap-3">
@@ -376,14 +321,14 @@ export default function Navbar() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="py-2.5 rounded-full bg-[#262626] text-center text-xs font-semibold text-white border border-[#333333]"
                 >
-                  Sign Up
+                  Open Account
                 </Link>
                 <Link
                   href="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 rounded-full bg-[#CAFF33] text-center text-xs font-bold text-black"
+                  className="py-2.5 rounded-full bg-[#CAFF33] text-center text-xs font-semibold text-black hover:bg-[#B8F020]"
                 >
-                  Login
+                  Sign In
                 </Link>
               </div>
             )}

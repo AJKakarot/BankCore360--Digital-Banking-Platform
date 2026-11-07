@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Search, RefreshCw, Radio } from "lucide-react";
-import { fetchAdminAuditLogs, AuditLogItem } from "@/lib/api";
+import { fetchAdminAuditLogs, AuditLogItem, getActiveUser } from "@/lib/api";
 import { toast } from "@/components/ui/Toast";
 
 export default function AdminAuditLogsPage() {
+  const router = useRouter();
   const [logs, setLogs] = useState<AuditLogItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
@@ -29,8 +31,13 @@ export default function AdminAuditLogsPage() {
   };
 
   useEffect(() => {
+    const user = getActiveUser();
+    if (!user || user.role !== "ADMIN") {
+      router.push("/login?role=ADMIN");
+      return;
+    }
     loadLogs();
-  }, []);
+  }, [router]);
 
   const filtered = logs.filter(
     (l) =>

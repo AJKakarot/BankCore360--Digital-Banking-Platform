@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Users,
   RefreshCw,
@@ -25,6 +26,7 @@ const ROLES: { role: RoleType; label: string; color: string }[] = [
 ];
 
 export default function AdminUsersPage() {
+  const router = useRouter();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
@@ -43,8 +45,13 @@ export default function AdminUsersPage() {
   };
 
   useEffect(() => {
+    const user = getActiveUser();
+    if (!user || user.role !== "ADMIN") {
+      router.push("/login?role=ADMIN");
+      return;
+    }
     loadUsers();
-  }, []);
+  }, [router]);
 
   const handleRoleChange = async (user: any, newRole: RoleType) => {
     if (user.role === newRole) return;

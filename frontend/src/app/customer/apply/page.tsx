@@ -39,11 +39,19 @@ export default function ApplyLoanPage() {
 
   useEffect(() => {
     const user = getActiveUser();
+    if (!user) {
+      router.push("/login?role=CUSTOMER");
+      return;
+    }
+    if (user.role !== "CUSTOMER" && user.role !== "ADMIN") {
+      router.push("/login");
+      return;
+    }
     setCurrentUser(user);
     setAuthChecked(true);
-  }, []);
+  }, [router]);
 
-  const isCustomer = currentUser && currentUser.role === "CUSTOMER";
+  const isCustomer = currentUser && (currentUser.role === "CUSTOMER" || currentUser.role === "ADMIN");
 
   // Reducing Balance EMI calculation
   const info = PRODUCT_INFO[loanType];
@@ -56,16 +64,16 @@ export default function ApplyLoanPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Ensure customer session is active for seamless origination
-    let user = getActiveUser();
-    if (!user || user.role !== "CUSTOMER") {
-      user = {
-        username: "dev_customer",
-        role: "CUSTOMER",
-        email: "customer@bankcore360.com",
-      };
-      saveSession(user);
-      setCurrentUser(user);
+    const user = getActiveUser();
+    if (!user) {
+      toast.error("Authentication Required", "Please log in to submit a loan application.");
+      router.push("/login?role=CUSTOMER");
+      return;
+    }
+
+    if (user.role !== "CUSTOMER" && user.role !== "ADMIN") {
+      toast.error("Unauthorized Role", "Only registered customer accounts can submit loan applications.");
+      return;
     }
 
     setSubmitting(true);

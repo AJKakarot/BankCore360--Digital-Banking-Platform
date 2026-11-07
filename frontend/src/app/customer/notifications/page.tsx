@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from "react";
 import { CheckCheck, Clock, RefreshCw, Inbox } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   NotificationItem,
   fetchNotifications,
   markAllNotificationsAsRead,
-  markNotificationAsRead
+  markNotificationAsRead,
+  getActiveUser
 } from "@/lib/api";
 import { toast } from "@/components/ui/Toast";
 
@@ -42,9 +44,18 @@ const SAMPLE_NOTIFICATIONS: NotificationItem[] = [
 ];
 
 export default function NotificationsPage() {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDemoData, setIsDemoData] = useState(false);
+
+  useEffect(() => {
+    const user = getActiveUser();
+    if (!user) {
+      router.push("/login?role=CUSTOMER");
+      return;
+    }
+  }, [router]);
 
   const loadNotifications = async () => {
     setLoading(true);

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   Bot,
   Send,
@@ -12,7 +13,7 @@ import {
   User,
   ArrowRight
 } from "lucide-react";
-import { askAiAssistant, AiChatResponse } from "@/lib/api";
+import { askAiAssistant, AiChatResponse, getActiveUser } from "@/lib/api";
 
 const SUGGESTED_QUESTIONS = [
   { label: "Loan Eligibility", query: "What is the loan eligibility criteria?" },
@@ -137,9 +138,18 @@ function formatInlineText(str: string): React.ReactNode[] {
 }
 
 export default function AiAssistantPage() {
+  const router = useRouter();
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [inputQuery, setInputQuery] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const user = getActiveUser();
+    if (!user) {
+      router.push("/login?role=CUSTOMER");
+      return;
+    }
+  }, [router]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);

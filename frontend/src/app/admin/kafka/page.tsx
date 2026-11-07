@@ -18,11 +18,13 @@ import {
   ArrowRight
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   fetchKafkaStreamStatus,
   KafkaStreamStatus,
   OutboxEventItem,
-  ProcessedEventItem
+  ProcessedEventItem,
+  getActiveUser
 } from "@/lib/api";
 import { toast } from "@/components/ui/Toast";
 
@@ -154,6 +156,7 @@ const DEMO_STATUS: KafkaStreamStatus = {
 };
 
 export default function AdminKafkaMonitorPage() {
+  const router = useRouter();
   const [data, setData] = useState<KafkaStreamStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
@@ -179,8 +182,13 @@ export default function AdminKafkaMonitorPage() {
   };
 
   useEffect(() => {
+    const user = getActiveUser();
+    if (!user || user.role !== "ADMIN") {
+      router.push("/login?role=ADMIN");
+      return;
+    }
     loadStreamStatus();
-  }, []);
+  }, [router]);
 
   const streamData = data || DEMO_STATUS;
 

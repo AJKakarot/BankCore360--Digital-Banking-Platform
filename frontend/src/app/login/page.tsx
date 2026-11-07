@@ -13,7 +13,7 @@ import {
   Loader2
 } from "lucide-react";
 import { toast } from "@/components/ui/Toast";
-import { loginUser, UserSession } from "@/lib/api";
+import { loginUser, UserSession, getActiveUser } from "@/lib/api";
 import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
 
 type RoleType = "CUSTOMER" | "CHECKER" | "MANAGER" | "ADMIN";
@@ -101,6 +101,13 @@ function LoginForm() {
     title: t.role,
     category: t.category,
   }));
+
+  useEffect(() => {
+    const user = getActiveUser();
+    if (user) {
+      routeToRoleDashboard(user.role);
+    }
+  }, []);
 
   useEffect(() => {
     if (initialRoleParam) {

@@ -69,6 +69,10 @@ export default function ManagerDashboard() {
       router.push("/login?role=MANAGER");
       return;
     }
+    if (user.role !== "MANAGER" && user.role !== "ADMIN") {
+      router.push("/login?role=MANAGER");
+      return;
+    }
 
     fetchManagerPendingApplications().then((apps) => {
       if (apps && apps.length > 0) {
