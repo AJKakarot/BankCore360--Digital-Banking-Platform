@@ -201,7 +201,7 @@ export default function Navbar() {
               </button>
             </>
           ) : (
-            <>
+            <div className="hidden md:flex items-center space-x-3">
               <Link
                 href="/login"
                 className="text-xs sm:text-sm font-medium text-white hover:text-[#CAFF33] px-3 py-2 transition"
@@ -214,7 +214,7 @@ export default function Navbar() {
               >
                 Open Account
               </Link>
-            </>
+            </div>
           )}
 
           {/* Mobile Hamburger Toggle Button */}
