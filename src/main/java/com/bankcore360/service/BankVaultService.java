@@ -201,6 +201,57 @@ public class BankVaultService {
     }
 
     /**
+     * Records atomic & idempotent repayment inflow into the Central Bank Vault.
+     * Replenishes the availableLiquidity pool and increments totalRepaid.
+     */
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public VaultTransaction recordRepaymentInflow(String loanReference, Integer installmentNumber, BigDecimal amount, String payerUsername) {
+        String idempotencyKey = "REPAY-" + loanReference + "-INST-" + installmentNumber;
+
+        Optional<VaultTransaction> existing = vaultTransactionRepository.findByIdempotencyKey(idempotencyKey);
+        if (existing.isPresent()) {
+            log.warn("⚠️ Repayment inflow idempotency caught: Loan {} Installment #{} already credited in Txn {}",
+                    loanReference, installmentNumber, existing.get().getTransactionReference());
+            return existing.get();
+        }
+
+        BankVault vault = bankVaultRepository.findByIdWithLock(BankVault.DEFAULT_VAULT_ID)
+                .orElseGet(() -> {
+                    BankVault nv = new BankVault(BankVault.DEFAULT_VAULT_ID, "BankCore360 Central Treasury & Reserve", BankVault.DEFAULT_INITIAL_CAPITAL);
+                    return bankVaultRepository.save(nv);
+                });
+
+        BigDecimal balanceBefore = vault.getAvailableLiquidity();
+        BigDecimal balanceAfter = balanceBefore.add(amount);
+
+        vault.setAvailableLiquidity(balanceAfter);
+        vault.setTotalRepaid(vault.getTotalRepaid().add(amount));
+        vault.setUpdatedAt(LocalDateTime.now());
+        bankVaultRepository.save(vault);
+
+        String txnRef = generateTransactionReference("RPY");
+        VaultTransaction txn = new VaultTransaction(
+                txnRef,
+                idempotencyKey,
+                VaultTransactionType.REPAYMENT_INFLOW,
+                "CREDIT",
+                amount,
+                balanceBefore,
+                balanceAfter,
+                loanReference,
+                "VAULT-001",
+                payerUsername != null ? payerUsername : "CUSTOMER",
+                payerUsername != null ? payerUsername : "CUSTOMER",
+                "EMI Repayment Inflow for " + loanReference + " (Installment #" + installmentNumber + ") of ₹" + amount
+        );
+
+        VaultTransaction saved = vaultTransactionRepository.save(txn);
+        log.info("💰 [REPAYMENT INFLOW ATOMIC] Credited ₹{} to Vault (New Liquidity: ₹{}). Total Repaid: ₹{}",
+                amount, balanceAfter, vault.getTotalRepaid());
+        return saved;
+    }
+
+    /**
      * Returns live status of Bank Vault, balances, utilization %, and recent 20 ledger events.
      */
     @Transactional(readOnly = true)
@@ -266,3 +317,4 @@ public class BankVaultService {
         return sb.toString();
     }
 }
+

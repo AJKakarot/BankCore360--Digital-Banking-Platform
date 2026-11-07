@@ -35,6 +35,15 @@ public class Notification {
     @Column(length = 64)
     private String relatedReference;
 
+    @Column(length = 255)
+    private String actionUrl;
+
+    @Column(length = 64)
+    private String actionLabel;
+
+    @Column(length = 500)
+    private String actionPayload;
+
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -53,6 +62,14 @@ public class Notification {
         this.relatedReference = relatedReference;
         this.readStatus = false;
         this.createdAt = LocalDateTime.now();
+    }
+
+    public Notification(String recipientUsername, String notificationType, String title, String message,
+                        String relatedReference, String actionUrl, String actionLabel, String actionPayload) {
+        this(recipientUsername, notificationType, title, message, relatedReference);
+        this.actionUrl = actionUrl;
+        this.actionLabel = actionLabel;
+        this.actionPayload = actionPayload;
     }
 
     public Long getId() {
@@ -111,6 +128,30 @@ public class Notification {
         this.relatedReference = relatedReference;
     }
 
+    public String getActionUrl() {
+        return actionUrl;
+    }
+
+    public void setActionUrl(String actionUrl) {
+        this.actionUrl = actionUrl;
+    }
+
+    public String getActionLabel() {
+        return actionLabel;
+    }
+
+    public void setActionLabel(String actionLabel) {
+        this.actionLabel = actionLabel;
+    }
+
+    public String getActionPayload() {
+        return actionPayload;
+    }
+
+    public void setActionPayload(String actionPayload) {
+        this.actionPayload = actionPayload;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -119,4 +160,3 @@ public class Notification {
         this.createdAt = createdAt;
     }
 }
-

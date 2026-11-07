@@ -24,6 +24,13 @@ public class NotificationService {
 
     @Transactional
     public void notifyUser(String recipientUsername, String notificationType, String title, String message, String relatedReference) {
+        notifyUserWithAction(recipientUsername, notificationType, title, message, relatedReference, null, null, null);
+    }
+
+    @Transactional
+    public void notifyUserWithAction(String recipientUsername, String notificationType, String title,
+                                     String message, String relatedReference,
+                                     String actionUrl, String actionLabel, String actionPayload) {
         if (recipientUsername == null || recipientUsername.isBlank()) {
             return;
         }
@@ -32,7 +39,10 @@ public class NotificationService {
                 notificationType != null ? notificationType : "SYSTEM",
                 title,
                 message,
-                relatedReference
+                relatedReference,
+                actionUrl,
+                actionLabel,
+                actionPayload
         );
         notificationRepository.save(notification);
     }
@@ -81,8 +91,10 @@ public class NotificationService {
                 n.getMessage(),
                 n.isReadStatus(),
                 n.getRelatedReference(),
+                n.getActionUrl(),
+                n.getActionLabel(),
+                n.getActionPayload(),
                 n.getCreatedAt()
         );
     }
 }
-

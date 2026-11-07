@@ -98,6 +98,31 @@ public class LoanApplicationController {
                 .body(fileResource);
     }
 
+    @GetMapping("/my-repayments")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    @Operation(summary = "View all repayments for customer", description = "Returns all upcoming, overdue, and paid EMI installments across all customer loans")
+    public ResponseEntity<List<LoanRepaymentResponse>> getMyRepayments(Authentication authentication) {
+        List<LoanRepaymentResponse> repayments = customerLoanService.getCustomerRepayments(authentication);
+        return ResponseEntity.ok(repayments);
+    }
+
+    @PostMapping("/repayments/{repaymentId}/pay")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    @Operation(summary = "1-Click pay EMI installment", description = "Directly pays an EMI installment by its ID, applying any late fees and crediting Bank Vault")
+    public ResponseEntity<LoanRepaymentResponse> payRepaymentDirect(@PathVariable Long repaymentId,
+                                                                    Authentication authentication) {
+        LoanRepaymentResponse response = customerLoanService.payRepaymentById(repaymentId, authentication);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/repayments/trigger-overdue-and-reminders")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Trigger overdue penalties and EMI reminder notifications", description = "Scans all unpaid installments, adds ₹500 late penalty to overdue EMIs, and dispatches actionable notifications")
+    public ResponseEntity<String> triggerOverdueAndReminders() {
+        int count = customerLoanService.triggerMonthlyOverdueAndReminders();
+        return ResponseEntity.ok("Processed " + count + " monthly overdue/reminder repayment actions.");
+    }
+
     @GetMapping("/{applicationReference}/repayments")
     @PreAuthorize("hasAnyRole('CUSTOMER', 'CHECKER', 'MANAGER', 'ADMIN')")
     @Operation(summary = "View EMI repayment schedule", description = "Returns monthly amortization schedule for disbursed loans")

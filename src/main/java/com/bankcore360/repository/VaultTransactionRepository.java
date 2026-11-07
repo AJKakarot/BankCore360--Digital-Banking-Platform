@@ -20,3 +20,4 @@ public interface VaultTransactionRepository extends JpaRepository<VaultTransacti
 
     List<VaultTransaction> findByBeneficiaryAccountNumberOrderByTimestampDesc(String accountNumber);
 }
+

@@ -196,8 +196,28 @@ export interface NotificationItem {
   title: string;
   message: string;
   relatedReference?: string;
+  actionUrl?: string;
+  actionLabel?: string;
+  actionPayload?: string;
   readStatus: boolean;
   createdAt: string;
+}
+
+export interface LoanRepaymentItem {
+  id: number;
+  installmentNumber: number;
+  dueDate: string;
+  emiAmount: number;
+  principalComponent: number;
+  interestComponent: number;
+  outstandingBalance: number;
+  status: "UPCOMING" | "PAID" | "OVERDUE";
+  paidAt?: string;
+  paymentReference?: string;
+  latePenaltyAmount?: number;
+  totalPayableAmount?: number;
+  applicationReference?: string;
+  isOverdue?: boolean;
 }
 
 export interface EventChannelDetail {
@@ -1144,6 +1164,50 @@ export async function markAllNotificationsAsRead(): Promise<void> {
   } catch (err) {
     console.error("Failed to mark all notifications as read:", err);
   }
+}
+
+// --- Loan Repayments & Overdue Penalty APIs ---
+export async function fetchMyRepayments(): Promise<LoanRepaymentItem[]> {
+  try {
+    const res = await fetch(`${SPRING_BOOT_API}/api/loans/my-repayments`, {
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch customer repayments");
+    return await res.json();
+  } catch (err) {
+    console.warn("Could not fetch repayments:", err);
+    return [];
+  }
+}
+
+export async function payEmiInstallment(
+  repaymentId: number,
+  applicationReference?: string
+): Promise<LoanRepaymentItem> {
+  const url = applicationReference
+    ? `${SPRING_BOOT_API}/api/loans/${applicationReference}/repayments/${repaymentId}/pay`
+    : `${SPRING_BOOT_API}/api/loans/repayments/${repaymentId}/pay`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Failed to process EMI payment");
+  }
+  return res.json();
+}
+
+export async function triggerOverdueAndReminders(): Promise<string> {
+  const res = await fetch(`${SPRING_BOOT_API}/api/loans/repayments/trigger-overdue-and-reminders`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    throw new Error("Failed to trigger overdue check");
+  }
+  return res.text();
 }
 
 // --- Event Stream & Outbox APIs ---

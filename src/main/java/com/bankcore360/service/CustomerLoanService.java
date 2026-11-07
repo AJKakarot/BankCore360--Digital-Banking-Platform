@@ -17,6 +17,7 @@ import com.bankcore360.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -42,6 +46,12 @@ public class CustomerLoanService {
     private final LoanAuditService loanAuditService;
     private final NotificationService notificationService;
     private final OutboxService outboxService;
+
+    @Autowired(required = false)
+    private BankVaultService bankVaultService;
+
+    @Autowired(required = false)
+    private BankAccountRepository bankAccountRepository;
 
     private static final String LOAN_EVENTS_TOPIC = "loan-events";
     private static final String REPAYMENT_EVENTS_TOPIC = "repayment-events";
@@ -257,13 +267,45 @@ public class CustomerLoanService {
             throw new InvalidLoanStateException("Installment #" + installment.getInstallmentNumber() + " is already paid.");
         }
 
+        BigDecimal totalPayable = installment.getTotalPayableAmount();
+        String principalName = auth != null ? auth.getName() : "CUSTOMER";
+
+        // 1. Credit Central Bank Vault via Repayment Inflow atomically
+        if (bankVaultService != null) {
+            bankVaultService.recordRepaymentInflow(
+                    reference,
+                    installment.getInstallmentNumber(),
+                    totalPayable,
+                    loanApp.getCustomer() != null ? loanApp.getCustomer().getFullName() : principalName
+            );
+        }
+
+        // 2. Deduct from customer's primary BankAccount if balance is sufficient
+        if (bankAccountRepository != null && loanApp.getCustomer() != null && loanApp.getCustomer().getId() != null) {
+            List<BankAccount> accounts = bankAccountRepository.findByCustomerIdOrderByCreatedAtDesc(loanApp.getCustomer().getId());
+            if (!accounts.isEmpty()) {
+                BankAccount acc = accounts.get(0);
+                if (acc.getBalance().compareTo(totalPayable) >= 0) {
+                    acc.setBalance(acc.getBalance().subtract(totalPayable));
+                    bankAccountRepository.save(acc);
+                }
+            }
+        }
+
         installment.setStatus(RepaymentStatus.PAID);
         installment.setPaidAt(LocalDateTime.now());
         installment.setPaymentReference("PAY-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
 
         LoanRepayment savedRepayment = loanRepaymentRepository.save(installment);
 
-        String principalName = auth != null ? auth.getName() : "CUSTOMER";
+        // Check if all installments are paid to complete the loan
+        long unpaidCount = loanRepaymentRepository.countByLoanApplicationIdAndStatus(loanApp.getId(), RepaymentStatus.UPCOMING)
+                + loanRepaymentRepository.countByLoanApplicationIdAndStatus(loanApp.getId(), RepaymentStatus.OVERDUE);
+        if (unpaidCount == 0) {
+            loanApp.setStatus(LoanStatus.CLOSED);
+            loanApplicationRepository.save(loanApp);
+        }
+
         loanAuditService.logAction(
                 reference,
                 principalName,
@@ -271,24 +313,28 @@ public class CustomerLoanService {
                 "EMI_INSTALLMENT_PAID",
                 RepaymentStatus.UPCOMING.name(),
                 RepaymentStatus.PAID.name(),
-                "Paid installment #" + savedRepayment.getInstallmentNumber() + " amount ₹" + savedRepayment.getEmiAmount()
+                "Paid installment #" + savedRepayment.getInstallmentNumber() + " total amount ₹" + totalPayable
+                        + (savedRepayment.getLatePenaltyAmount().compareTo(BigDecimal.ZERO) > 0 ? " (includes late fee ₹" + savedRepayment.getLatePenaltyAmount() + ")" : "")
         );
 
-        notificationService.notifyUser(
+        notificationService.notifyUserWithAction(
                 principalName,
-                "EMI_PAID",
-                "EMI Payment Received",
-                "Payment of ₹" + savedRepayment.getEmiAmount() + " for installment #"
-                        + savedRepayment.getInstallmentNumber() + " recorded successfully. Ref: "
-                        + savedRepayment.getPaymentReference(),
-                reference
+                "PAYMENT_SUCCESS",
+                "✅ EMI Payment Successful",
+                "Successfully received ₹" + totalPayable + " for installment #"
+                        + savedRepayment.getInstallmentNumber() + " of loan " + reference + ". Ref: "
+                        + savedRepayment.getPaymentReference() + ". Bank liquidity reserve replenished.",
+                reference,
+                "/customer/dashboard",
+                "View Receipt",
+                "{\"paymentReference\":\"" + savedRepayment.getPaymentReference() + "\"}"
         );
 
         if (outboxService != null) {
             EmiPaidPayload payload = new EmiPaidPayload(
                     reference,
                     savedRepayment.getInstallmentNumber(),
-                    savedRepayment.getEmiAmount(),
+                    totalPayable,
                     savedRepayment.getPaymentReference(),
                     savedRepayment.getPaidAt()
             );
@@ -296,6 +342,92 @@ public class CustomerLoanService {
         }
 
         return mapToRepaymentResponse(savedRepayment);
+    }
+
+    @Transactional
+    public LoanRepaymentResponse payRepaymentById(Long repaymentId, Authentication auth) {
+        LoanRepayment installment = loanRepaymentRepository.findById(repaymentId)
+                .orElseThrow(() -> new LoanApplicationNotFoundException("Installment ID " + repaymentId + " not found"));
+        return payEmiInstallment(installment.getLoanApplication().getApplicationReference(), repaymentId, auth);
+    }
+
+    @Transactional(readOnly = true)
+    public List<LoanRepaymentResponse> getCustomerRepayments(Authentication auth) {
+        Customer customer = resolveCustomerFromAuth(auth);
+        List<LoanApplication> apps = loanApplicationRepository.findByCustomerOrderBySubmittedAtDesc(customer);
+        if (apps.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Long> appIds = apps.stream().map(LoanApplication::getId).toList();
+        return loanRepaymentRepository.findByLoanApplicationIdInOrderByDueDateAsc(appIds)
+                .stream()
+                .map(this::mapToRepaymentResponse)
+                .toList();
+    }
+
+    @Scheduled(cron = "0 0 1 * * ?") // Daily at 1:00 AM
+    @Transactional
+    public int triggerMonthlyOverdueAndReminders() {
+        LocalDate today = LocalDate.now();
+        List<LoanRepayment> nonPaidRepayments = loanRepaymentRepository.findByStatusNot(RepaymentStatus.PAID);
+        int actionsTaken = 0;
+
+        for (LoanRepayment rep : nonPaidRepayments) {
+            LoanApplication app = rep.getLoanApplication();
+            if (app == null) continue;
+            Customer cust = app.getCustomer();
+            String recipient = cust != null ? cust.getEmail() : "customer";
+            String loanRef = app.getApplicationReference();
+
+            // 1. OVERDUE CONDITION: Due date has passed and still not PAID
+            if (rep.getDueDate().isBefore(today)) {
+                if (rep.getStatus() != RepaymentStatus.OVERDUE) {
+                    rep.setStatus(RepaymentStatus.OVERDUE);
+                }
+                // Apply late penalty fee if not yet applied (flat ₹500 or 2% of EMI, min ₹500)
+                if (rep.getLatePenaltyAmount() == null || rep.getLatePenaltyAmount().compareTo(BigDecimal.ZERO) == 0) {
+                    BigDecimal calculatedPenalty = rep.getEmiAmount().multiply(new BigDecimal("0.02"))
+                            .max(new BigDecimal("500.00"))
+                            .setScale(2, RoundingMode.HALF_UP);
+                    rep.setLatePenaltyAmount(calculatedPenalty);
+                    loanRepaymentRepository.save(rep);
+                }
+
+                BigDecimal totalPayable = rep.getTotalPayableAmount();
+                notificationService.notifyUserWithAction(
+                        recipient,
+                        "EMI_OVERDUE",
+                        "🚨 Overdue Warning: Late Penalty ₹" + rep.getLatePenaltyAmount() + " Added",
+                        "Your monthly EMI installment #" + rep.getInstallmentNumber() + " of ₹" + rep.getEmiAmount()
+                                + " for loan " + loanRef + " was due on " + rep.getDueDate()
+                                + ". A late fee of ₹" + rep.getLatePenaltyAmount() + " has been applied. Total payable: ₹"
+                                + totalPayable + ". Pay now to prevent credit bureau score degradation.",
+                        loanRef,
+                        "/customer/dashboard",
+                        "Pay Now (₹" + totalPayable + ")",
+                        "{\"repaymentId\":" + rep.getId() + ",\"applicationReference\":\"" + loanRef + "\"}"
+                );
+                actionsTaken++;
+            }
+            // 2. UPCOMING DUE REMINDER CONDITION: Due within next 7 days
+            else if (rep.getStatus() == RepaymentStatus.UPCOMING &&
+                    !rep.getDueDate().isAfter(today.plusDays(7))) {
+                notificationService.notifyUserWithAction(
+                        recipient,
+                        "EMI_DUE",
+                        "📅 Monthly EMI Reminder (Due " + rep.getDueDate() + ")",
+                        "Monthly installment #" + rep.getInstallmentNumber() + " of ₹" + rep.getEmiAmount()
+                                + " for loan " + loanRef + " is due on " + rep.getDueDate()
+                                + ". Pay today to keep your account 100% compliant.",
+                        loanRef,
+                        "/customer/dashboard",
+                        "Pay EMI (₹" + rep.getEmiAmount() + ")",
+                        "{\"repaymentId\":" + rep.getId() + ",\"applicationReference\":\"" + loanRef + "\"}"
+                );
+                actionsTaken++;
+            }
+        }
+        return actionsTaken;
     }
 
     public Customer resolveCustomerFromAuth(Authentication auth) {
@@ -467,6 +599,7 @@ public class CustomerLoanService {
     }
 
     private LoanRepaymentResponse mapToRepaymentResponse(LoanRepayment rep) {
+        String appRef = rep.getLoanApplication() != null ? rep.getLoanApplication().getApplicationReference() : null;
         return new LoanRepaymentResponse(
                 rep.getId(),
                 rep.getInstallmentNumber(),
@@ -477,7 +610,9 @@ public class CustomerLoanService {
                 rep.getOutstandingBalance(),
                 rep.getStatus(),
                 rep.getPaidAt(),
-                rep.getPaymentReference()
+                rep.getPaymentReference(),
+                rep.getLatePenaltyAmount(),
+                appRef
         );
     }
 }

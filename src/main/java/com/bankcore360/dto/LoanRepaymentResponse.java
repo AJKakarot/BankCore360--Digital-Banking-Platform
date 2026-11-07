@@ -18,6 +18,10 @@ public class LoanRepaymentResponse {
     private RepaymentStatus status;
     private LocalDateTime paidAt;
     private String paymentReference;
+    private BigDecimal latePenaltyAmount = BigDecimal.ZERO;
+    private BigDecimal totalPayableAmount;
+    private String applicationReference;
+    private boolean isOverdue;
 
     public LoanRepaymentResponse() {
     }
@@ -26,6 +30,15 @@ public class LoanRepaymentResponse {
                                  BigDecimal emiAmount, BigDecimal principalComponent,
                                  BigDecimal interestComponent, BigDecimal outstandingBalance,
                                  RepaymentStatus status, LocalDateTime paidAt, String paymentReference) {
+        this(id, installmentNumber, dueDate, emiAmount, principalComponent, interestComponent,
+             outstandingBalance, status, paidAt, paymentReference, BigDecimal.ZERO, null);
+    }
+
+    public LoanRepaymentResponse(Long id, Integer installmentNumber, LocalDate dueDate,
+                                 BigDecimal emiAmount, BigDecimal principalComponent,
+                                 BigDecimal interestComponent, BigDecimal outstandingBalance,
+                                 RepaymentStatus status, LocalDateTime paidAt, String paymentReference,
+                                 BigDecimal latePenaltyAmount, String applicationReference) {
         this.id = id;
         this.installmentNumber = installmentNumber;
         this.dueDate = dueDate;
@@ -36,6 +49,12 @@ public class LoanRepaymentResponse {
         this.status = status;
         this.paidAt = paidAt;
         this.paymentReference = paymentReference;
+        this.latePenaltyAmount = latePenaltyAmount != null ? latePenaltyAmount : BigDecimal.ZERO;
+        this.totalPayableAmount = (emiAmount != null ? emiAmount : BigDecimal.ZERO)
+                .add(this.latePenaltyAmount);
+        this.applicationReference = applicationReference;
+        this.isOverdue = status == RepaymentStatus.OVERDUE ||
+                (status == RepaymentStatus.UPCOMING && dueDate != null && dueDate.isBefore(LocalDate.now()));
     }
 
     public Long getId() {
@@ -117,5 +136,39 @@ public class LoanRepaymentResponse {
     public void setPaymentReference(String paymentReference) {
         this.paymentReference = paymentReference;
     }
-}
 
+    public BigDecimal getLatePenaltyAmount() {
+        return latePenaltyAmount;
+    }
+
+    public void setLatePenaltyAmount(BigDecimal latePenaltyAmount) {
+        this.latePenaltyAmount = latePenaltyAmount;
+        if (this.emiAmount != null) {
+            this.totalPayableAmount = this.emiAmount.add(this.latePenaltyAmount != null ? this.latePenaltyAmount : BigDecimal.ZERO);
+        }
+    }
+
+    public BigDecimal getTotalPayableAmount() {
+        return totalPayableAmount != null ? totalPayableAmount : emiAmount;
+    }
+
+    public void setTotalPayableAmount(BigDecimal totalPayableAmount) {
+        this.totalPayableAmount = totalPayableAmount;
+    }
+
+    public String getApplicationReference() {
+        return applicationReference;
+    }
+
+    public void setApplicationReference(String applicationReference) {
+        this.applicationReference = applicationReference;
+    }
+
+    public boolean isOverdue() {
+        return isOverdue;
+    }
+
+    public void setOverdue(boolean overdue) {
+        isOverdue = overdue;
+    }
+}

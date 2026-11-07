@@ -6,3 +6,4 @@ public enum VaultTransactionType {
     REPAYMENT_INFLOW,
     RESERVE_REBALANCE
 }
+

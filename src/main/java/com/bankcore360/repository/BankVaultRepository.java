@@ -15,3 +15,4 @@ public interface BankVaultRepository extends JpaRepository<BankVault, Long> {
     @Query("SELECT v FROM BankVault v WHERE v.id = :id")
     Optional<BankVault> findByIdWithLock(@Param("id") Long id);
 }
+

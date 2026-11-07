@@ -16,5 +16,10 @@ public interface LoanRepaymentRepository extends JpaRepository<LoanRepayment, Lo
     List<LoanRepayment> findByLoanApplicationApplicationReferenceOrderByInstallmentNumberAsc(String applicationReference);
 
     long countByLoanApplicationIdAndStatus(Long loanApplicationId, RepaymentStatus status);
-}
 
+    List<LoanRepayment> findByStatusNot(RepaymentStatus status);
+
+    List<LoanRepayment> findByStatus(RepaymentStatus status);
+
+    List<LoanRepayment> findByLoanApplicationIdInOrderByDueDateAsc(List<Long> loanApplicationIds);
+}

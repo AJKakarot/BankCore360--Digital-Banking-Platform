@@ -9,3 +9,4 @@ public class InsufficientBankLiquidityException extends RuntimeException {
         super(message);
     }
 }
+

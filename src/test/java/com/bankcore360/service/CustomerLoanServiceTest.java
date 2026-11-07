@@ -236,5 +236,38 @@ class CustomerLoanServiceTest {
                 .isInstanceOf(InvalidLoanStateException.class)
                 .hasMessageContaining("Installment #1 is already paid");
     }
+
+    @Test
+    @DisplayName("Should trigger overdue penalty and send notification for past due installments")
+    void shouldTriggerOverdueAndApplyLatePenaltyAndNotification() {
+        LoanApplication app = new LoanApplication("LN-2026-TEST01", customer, LoanType.PERSONAL, new BigDecimal("100000.00"), 12, "Test");
+        app.setId(101L);
+        app.setStatus(LoanStatus.DISBURSED);
+
+        LoanRepayment overdueInstallment = new LoanRepayment(app, 1, LocalDate.now().minusDays(5),
+                new BigDecimal("8884.88"), new BigDecimal("7884.88"), new BigDecimal("1000.00"), new BigDecimal("92115.12"));
+        overdueInstallment.setId(902L);
+        overdueInstallment.setStatus(RepaymentStatus.UPCOMING);
+
+        when(loanRepaymentRepository.findByStatusNot(RepaymentStatus.PAID))
+                .thenReturn(List.of(overdueInstallment));
+        when(loanRepaymentRepository.save(any(LoanRepayment.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        int actions = customerLoanService.triggerMonthlyOverdueAndReminders();
+
+        assertThat(actions).isEqualTo(1);
+        assertThat(overdueInstallment.getStatus()).isEqualTo(RepaymentStatus.OVERDUE);
+        assertThat(overdueInstallment.getLatePenaltyAmount()).isGreaterThanOrEqualTo(new BigDecimal("500.00"));
+        verify(notificationService).notifyUserWithAction(
+                eq(customer.getEmail()),
+                eq("EMI_OVERDUE"),
+                contains("Overdue Warning"),
+                any(),
+                eq("LN-2026-TEST01"),
+                eq("/customer/dashboard"),
+                contains("Pay Now"),
+                any()
+        );
+    }
 }
 

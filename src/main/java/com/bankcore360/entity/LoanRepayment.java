@@ -46,6 +46,9 @@ public class LoanRepayment {
     @Column(nullable = false, length = 32)
     private RepaymentStatus status = RepaymentStatus.UPCOMING;
 
+    @Column(nullable = false, precision = 19, scale = 4)
+    private BigDecimal latePenaltyAmount = BigDecimal.ZERO;
+
     private LocalDateTime paidAt;
 
     @Column(length = 64)
@@ -65,6 +68,7 @@ public class LoanRepayment {
         this.interestComponent = interestComponent;
         this.outstandingBalance = outstandingBalance;
         this.status = RepaymentStatus.UPCOMING;
+        this.latePenaltyAmount = BigDecimal.ZERO;
     }
 
     public Long getId() {
@@ -137,6 +141,20 @@ public class LoanRepayment {
 
     public void setStatus(RepaymentStatus status) {
         this.status = status;
+    }
+
+    public BigDecimal getLatePenaltyAmount() {
+        return latePenaltyAmount != null ? latePenaltyAmount : BigDecimal.ZERO;
+    }
+
+    public void setLatePenaltyAmount(BigDecimal latePenaltyAmount) {
+        this.latePenaltyAmount = latePenaltyAmount != null ? latePenaltyAmount : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getTotalPayableAmount() {
+        BigDecimal emi = emiAmount != null ? emiAmount : BigDecimal.ZERO;
+        BigDecimal penalty = latePenaltyAmount != null ? latePenaltyAmount : BigDecimal.ZERO;
+        return emi.add(penalty);
     }
 
     public LocalDateTime getPaidAt() {

@@ -13,6 +13,7 @@ public enum LoanStatus {
     PENDING_MANAGER_APPROVAL,
     APPROVED,
     REJECTED,
-    DISBURSED
+    DISBURSED,
+    CLOSED
 }
 

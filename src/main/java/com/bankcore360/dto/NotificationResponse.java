@@ -11,6 +11,9 @@ public class NotificationResponse {
     private String message;
     private boolean readStatus;
     private String relatedReference;
+    private String actionUrl;
+    private String actionLabel;
+    private String actionPayload;
     private LocalDateTime createdAt;
 
     public NotificationResponse() {
@@ -19,6 +22,20 @@ public class NotificationResponse {
     public NotificationResponse(Long id, String recipientUsername, String notificationType,
                                 String title, String message, boolean readStatus,
                                 String relatedReference, LocalDateTime createdAt) {
+        this(id, recipientUsername, notificationType, title, message, readStatus, relatedReference,
+             null, null, null, createdAt);
+    }
+
+    public NotificationResponse(Long id, String recipientUsername, String title,
+                                String message, boolean readStatus, String relatedReference,
+                                LocalDateTime createdAt) {
+        this(id, recipientUsername, "SYSTEM", title, message, readStatus, relatedReference, createdAt);
+    }
+
+    public NotificationResponse(Long id, String recipientUsername, String notificationType,
+                                String title, String message, boolean readStatus,
+                                String relatedReference, String actionUrl, String actionLabel,
+                                String actionPayload, LocalDateTime createdAt) {
         this.id = id;
         this.recipientUsername = recipientUsername;
         this.notificationType = notificationType;
@@ -26,13 +43,10 @@ public class NotificationResponse {
         this.message = message;
         this.readStatus = readStatus;
         this.relatedReference = relatedReference;
+        this.actionUrl = actionUrl;
+        this.actionLabel = actionLabel;
+        this.actionPayload = actionPayload;
         this.createdAt = createdAt;
-    }
-
-    public NotificationResponse(Long id, String recipientUsername, String title,
-                                String message, boolean readStatus, String relatedReference,
-                                LocalDateTime createdAt) {
-        this(id, recipientUsername, "SYSTEM", title, message, readStatus, relatedReference, createdAt);
     }
 
     public Long getId() {
@@ -91,6 +105,30 @@ public class NotificationResponse {
         this.relatedReference = relatedReference;
     }
 
+    public String getActionUrl() {
+        return actionUrl;
+    }
+
+    public void setActionUrl(String actionUrl) {
+        this.actionUrl = actionUrl;
+    }
+
+    public String getActionLabel() {
+        return actionLabel;
+    }
+
+    public void setActionLabel(String actionLabel) {
+        this.actionLabel = actionLabel;
+    }
+
+    public String getActionPayload() {
+        return actionPayload;
+    }
+
+    public void setActionPayload(String actionPayload) {
+        this.actionPayload = actionPayload;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -99,4 +137,3 @@ public class NotificationResponse {
         this.createdAt = createdAt;
     }
 }
-
