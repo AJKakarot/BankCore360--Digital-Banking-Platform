@@ -29,6 +29,9 @@ public class BankAccountService {
     private final AppUserRepository appUserRepository;
     private final AccountNumberGenerator accountNumberGenerator;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.bankcore360.repository.VaultTransactionRepository vaultTransactionRepository;
+
     public BankAccountService(
             BankAccountRepository bankAccountRepository,
             AccountAuditLogRepository accountAuditLogRepository,
@@ -90,13 +93,32 @@ public class BankAccountService {
         return mapToResponse(savedAccount);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<BankAccountResponse> getMyAccounts(Authentication auth) {
         Customer customer = resolveCustomerFromAuth(auth);
-        return bankAccountRepository.findByCustomerOrderByCreatedAtDesc(customer)
-                .stream()
+        List<BankAccount> list = bankAccountRepository.findByCustomerOrderByCreatedAtDesc(customer);
+        if (list.isEmpty()) {
+            String accNum = "3601" + String.format("%08d", customer.getId() != null ? customer.getId() : 1);
+            BankAccount defaultAcc = new BankAccount(
+                    accNum,
+                    customer,
+                    AccountType.SAVINGS,
+                    BigDecimal.ZERO,
+                    AccountStatus.ACTIVE
+            );
+            list = List.of(bankAccountRepository.save(defaultAcc));
+        }
+        return list.stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<com.bankcore360.entity.VaultTransaction> getMyTransactions(Authentication auth) {
+        Customer customer = resolveCustomerFromAuth(auth);
+        if (vaultTransactionRepository == null) return List.of();
+        String accNum = "3601" + String.format("%08d", customer.getId() != null ? customer.getId() : 1);
+        return vaultTransactionRepository.findByBeneficiaryAccountNumberOrderByTimestampDesc(accNum);
     }
 
     @Transactional(readOnly = true)

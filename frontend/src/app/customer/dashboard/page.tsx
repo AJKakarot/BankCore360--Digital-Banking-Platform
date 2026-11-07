@@ -8,17 +8,29 @@ import {
   Upload,
   Bot,
   ArrowRight,
-  TrendingUp,
-  Clock,
+  FolderKanban,
+  Wallet,
+  ArrowDownLeft,
   CheckCircle2,
-  FolderKanban
+  Landmark
 } from "lucide-react";
-import { getActiveUser, fetchMyApplications, LoanApplication, UserSession } from "@/lib/api";
+import {
+  getActiveUser,
+  fetchMyApplications,
+  fetchMyBankAccounts,
+  fetchMyTransactions,
+  LoanApplication,
+  CustomerBankAccount,
+  VaultTransaction,
+  UserSession
+} from "@/lib/api";
 
 export default function CustomerDashboard() {
   const router = useRouter();
   const [session, setSession] = useState<UserSession | null>(null);
   const [applications, setApplications] = useState<LoanApplication[]>([]);
+  const [accounts, setAccounts] = useState<CustomerBankAccount[]>([]);
+  const [transactions, setTransactions] = useState<VaultTransaction[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,11 +40,22 @@ export default function CustomerDashboard() {
       return;
     }
     setSession(user);
-    fetchMyApplications().then((apps) => {
-      setApplications(apps);
+
+    Promise.all([
+      fetchMyApplications(),
+      fetchMyBankAccounts(),
+      fetchMyTransactions()
+    ]).then(([apps, accs, txns]) => {
+      setApplications(apps || []);
+      setAccounts(accs || []);
+      setTransactions(txns || []);
+      setLoading(false);
+    }).catch(() => {
       setLoading(false);
     });
   }, [router]);
+
+  const primaryAccount = accounts.length > 0 ? accounts[0] : null;
 
   return (
     <div className="bg-[#141414] text-white space-y-6 sm:space-y-8 py-4 sm:py-6 px-3.5 sm:px-6 max-w-5xl mx-auto">
@@ -47,7 +70,7 @@ export default function CustomerDashboard() {
             Welcome back, {session?.username || "Valued Customer"}
           </h1>
           <p className="text-xs sm:text-sm text-neutral-400 max-w-lg">
-            Manage your loan applications, upload required proofs, and track approvals.
+            Manage your loan applications, review disbursed funds, and track real-time payments.
           </p>
         </div>
 
@@ -66,6 +89,49 @@ export default function CustomerDashboard() {
             <Bot className="w-3.5 h-3.5 text-[#CAFF33]" />
             <span>AI Assistant</span>
           </Link>
+        </div>
+      </div>
+
+      {/* OPERATIVE ACCOUNT & LIVE DISBURSEMENT BALANCE */}
+      <div className="bg-gradient-to-r from-[#1C1C1C] via-[#1F1F1F] to-[#1C1C1C] border border-[#2E2E2E] p-5 sm:p-6 rounded-2xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div className="flex items-center space-x-4">
+          <div className="w-12 h-12 rounded-2xl bg-[#CAFF33]/15 text-[#CAFF33] flex items-center justify-center border border-[#CAFF33]/30 shrink-0">
+            <Wallet className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center space-x-2">
+              <span className="text-[11px] uppercase tracking-wider text-neutral-400 font-medium">
+                Primary Linked Account
+              </span>
+              <span className="text-[10px] px-2 py-0.2 rounded-full bg-emerald-500/15 text-emerald-400 font-mono border border-emerald-500/30">
+                ACTIVE
+              </span>
+            </div>
+            <div className="text-sm font-mono font-bold text-white mt-0.5">
+              A/C #{primaryAccount?.accountNumber || "360100000001"}
+            </div>
+            <div className="text-[11px] text-neutral-400 mt-0.5">
+              Savings Account • Real-time Vault Disbursal Destination
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-[#141414] border border-[#2B2B2B] px-5 py-3.5 rounded-xl flex items-center justify-between md:justify-end space-x-6">
+          <div>
+            <div className="text-[11px] text-neutral-400 font-medium">Available Account Balance</div>
+            <div className="text-2xl font-extrabold text-[#CAFF33] font-mono mt-0.5">
+              ₹{(primaryAccount?.balance ?? 0).toLocaleString()}
+            </div>
+          </div>
+          <div className="text-right border-l border-[#262626] pl-4">
+            <div className="text-[10px] text-emerald-400 font-medium flex items-center space-x-1 justify-end">
+              <ArrowDownLeft className="w-3 h-3" />
+              <span>Instant Credit</span>
+            </div>
+            <div className="text-[10px] text-neutral-400 mt-0.5 font-mono">
+              Auto-credited from Vault
+            </div>
+          </div>
         </div>
       </div>
 
@@ -100,6 +166,47 @@ export default function CustomerDashboard() {
           <div className="text-[10px] sm:text-[11px] text-neutral-400 mt-1">Instant Disbursal</div>
         </div>
       </div>
+
+      {/* Disbursed Payment Receipts (if any exist) */}
+      {transactions.length > 0 && (
+        <div className="bg-[#1C1C1C] border border-[#262626] rounded-2xl p-4 sm:p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center space-x-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <span>Recent Disbursed Payments & Credits</span>
+            </h3>
+            <span className="text-[10px] text-neutral-400 font-mono">From Bank Vault</span>
+          </div>
+
+          <div className="space-y-2">
+            {transactions.map((t) => (
+              <div
+                key={t.id}
+                className="p-3 bg-[#141414] rounded-xl border border-[#262626] flex items-center justify-between text-xs"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">
+                    +₹
+                  </div>
+                  <div>
+                    <div className="font-semibold text-white">
+                      Loan Disbursed ({t.relatedReference || "Facility"})
+                    </div>
+                    <div className="text-[10px] text-neutral-400 font-mono">Txn ID: {t.transactionReference}</div>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <div className="text-emerald-400 font-mono font-bold">+₹{t.amount?.toLocaleString()}</div>
+                  <div className="text-[10px] text-neutral-500">
+                    {t.timestamp ? new Date(t.timestamp).toLocaleDateString() : "Disbursed"}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Applications Table */}
       <div className="bg-[#1C1C1C] border border-[#262626] rounded-2xl overflow-hidden shadow-lg">

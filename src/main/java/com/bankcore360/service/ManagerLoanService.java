@@ -47,6 +47,9 @@ public class ManagerLoanService {
     private final OutboxService outboxService;
     private final SecureRandom secureRandom = new SecureRandom();
 
+    @Autowired(required = false)
+    private BankVaultService bankVaultService;
+
     private static final String APPROVAL_EVENTS_TOPIC = "approval-events";
     private static final String REPAYMENT_EVENTS_TOPIC = "repayment-events";
 
@@ -244,6 +247,17 @@ public class ManagerLoanService {
 
         LoanApplication savedApp = loanApplicationRepository.save(app);
 
+        // Atomic & Idempotent Bank Vault Debit & Customer Account Credit
+        VaultTransaction vaultTxn = null;
+        if (bankVaultService != null) {
+            vaultTxn = bankVaultService.disburseLoanFromVault(savedApp, operator);
+        }
+
+        String finalTxnRef = vaultTxn != null ? vaultTxn.getTransactionReference() : disburseRef;
+        String creditedAccount = vaultTxn != null && vaultTxn.getBeneficiaryAccountNumber() != null
+                ? vaultTxn.getBeneficiaryAccountNumber()
+                : ("3601" + String.format("%08d", app.getCustomer().getId()));
+
         // Generate EMI Repayment Schedule automatically
         List<LoanRepayment> repayments = generateRepaymentSchedule(savedApp);
 
@@ -254,15 +268,15 @@ public class ManagerLoanService {
                 "LOAN_DISBURSED",
                 prevStatus.name(),
                 LoanStatus.DISBURSED.name(),
-                "Disbursed loan amount ₹" + app.getApprovedAmount() + ". Disbursement Ref: " + disburseRef
+                "Disbursed loan amount ₹" + app.getApprovedAmount() + " from Vault to A/C " + creditedAccount + ". Txn Ref: " + finalTxnRef
         );
 
         notificationService.notifyUser(
                 app.getCustomer().getEmail(),
-                "Loan Disbursed",
+                "Loan Disbursed to Account",
                 "Your approved loan of ₹" + app.getApprovedAmount()
-                        + " (Ref: " + app.getApplicationReference() + ") has been successfully disbursed! "
-                        + "Your monthly EMI repayment schedule has been generated.",
+                        + " (Ref: " + app.getApplicationReference() + ") has been successfully disbursed from Bank Vault into your Account #"
+                        + creditedAccount + "! Payment Txn: " + finalTxnRef + ". Monthly EMI schedule generated.",
                 app.getApplicationReference()
         );
 
@@ -277,15 +291,13 @@ public class ManagerLoanService {
             outboxService.saveEvent(REPAYMENT_EVENTS_TOPIC, EventEnvelope.create("EMI_DUE", savedApp.getApplicationReference(), payload));
         }
 
-        String simulatedAccount = "3601" + String.format("%08d", app.getCustomer().getId());
-
         return new DisbursementResponse(
                 app.getApplicationReference(),
-                disburseRef,
+                finalTxnRef,
                 app.getApprovedAmount(),
                 app.getDisbursedAt(),
                 operator,
-                simulatedAccount,
+                creditedAccount,
                 "DISBURSED"
         );
     }

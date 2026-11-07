@@ -37,6 +37,12 @@ public class BankAccountController {
         return bankAccountService.getMyAccounts(authentication);
     }
 
+    @GetMapping("/my-transactions")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public List<com.bankcore360.entity.VaultTransaction> getMyTransactions(Authentication authentication) {
+        return bankAccountService.getMyTransactions(authentication);
+    }
+
     @GetMapping("/{accountNumber}")
     @PreAuthorize("hasAnyRole('CUSTOMER', 'CHECKER', 'MANAGER', 'ADMIN')")
     public BankAccountResponse getAccountByNumber(
