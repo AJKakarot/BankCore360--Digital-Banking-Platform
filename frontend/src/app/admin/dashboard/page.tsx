@@ -167,39 +167,39 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           {/* Total Capital */}
           <div className="bg-[#141414] border border-[#262626] p-4 rounded-xl">
-            <div className="text-[11px] text-neutral-400 font-medium">Total Bank Capital</div>
+            <div className="text-[11px] text-white font-medium">Total Bank Capital</div>
             <div className="text-2xl font-extrabold text-white mt-1">
               {formatLakhs(vaultStatus?.totalCapital || 10000000)}
             </div>
-            <div className="text-[10px] text-neutral-400 mt-1 font-mono">
+            <div className="text-[10px] text-white mt-1 font-mono">
               ₹{(vaultStatus?.totalCapital || 10000000).toLocaleString()} Core Base
             </div>
           </div>
 
           {/* Available Liquidity */}
-          <div className="bg-[#141414] border border-emerald-900/40 p-4 rounded-xl">
-            <div className="text-[11px] text-emerald-400 font-medium flex items-center justify-between">
+          <div className="bg-[#141414] border border-[#262626] p-4 rounded-xl">
+            <div className="text-[11px] text-white font-medium flex items-center justify-between">
               <span>Available Liquidity</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="w-2 h-2 rounded-full bg-[#CAFF33] animate-pulse"></span>
             </div>
-            <div className="text-2xl font-extrabold text-emerald-400 mt-1">
+            <div className="text-2xl font-extrabold text-white mt-1">
               {formatLakhs(vaultStatus?.availableLiquidity || 9750000)}
             </div>
-            <div className="text-[10px] text-emerald-500/80 mt-1 font-mono">
+            <div className="text-[10px] text-white mt-1 font-mono">
               ₹{(vaultStatus?.availableLiquidity || 9750000).toLocaleString()} Ready to Disburse
             </div>
           </div>
 
           {/* Total Disbursed */}
           <div className="bg-[#141414] border border-[#262626] p-4 rounded-xl">
-            <div className="text-[11px] text-[#CAFF33] font-medium flex items-center justify-between">
+            <div className="text-[11px] text-white font-medium flex items-center justify-between">
               <span>Disbursed to Borrowers</span>
-              <TrendingDown className="w-3.5 h-3.5 text-[#CAFF33]" />
+              <TrendingDown className="w-3.5 h-3.5 text-white/70" />
             </div>
-            <div className="text-2xl font-extrabold text-[#CAFF33] mt-1">
+            <div className="text-2xl font-extrabold text-white mt-1">
               {formatLakhs(vaultStatus?.totalDisbursed || 250000)}
             </div>
-            <div className="text-[10px] text-neutral-400 mt-1 font-mono">
+            <div className="text-[10px] text-white mt-1 font-mono">
               {vaultStatus?.utilizationPercent ?? 2.5}% Capital Utilization
             </div>
           </div>
