@@ -47,11 +47,8 @@ public class ManagerLoanService {
     private final OutboxService outboxService;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    @Value("${app.kafka.topics.approval-events:approval-events}")
-    private String approvalEventsTopic = "approval-events";
-
-    @Value("${app.kafka.topics.repayment-events:repayment-events}")
-    private String repaymentEventsTopic = "repayment-events";
+    private static final String APPROVAL_EVENTS_TOPIC = "approval-events";
+    private static final String REPAYMENT_EVENTS_TOPIC = "repayment-events";
 
     @Autowired
     public ManagerLoanService(LoanApplicationRepository loanApplicationRepository,
@@ -162,7 +159,7 @@ public class ManagerLoanService {
                     managerName,
                     savedApp.getDecisionTimestamp()
             );
-            outboxService.saveEvent(approvalEventsTopic, EventEnvelope.create("LOAN_APPROVED", savedApp.getApplicationReference(), payload));
+            outboxService.saveEvent(APPROVAL_EVENTS_TOPIC, EventEnvelope.create("LOAN_APPROVED", savedApp.getApplicationReference(), payload));
         }
 
         return mapToResponse(savedApp);
@@ -218,7 +215,7 @@ public class ManagerLoanService {
                     managerName,
                     savedApp.getRejectedAt()
             );
-            outboxService.saveEvent(approvalEventsTopic, EventEnvelope.create("LOAN_REJECTED", savedApp.getApplicationReference(), payload));
+            outboxService.saveEvent(APPROVAL_EVENTS_TOPIC, EventEnvelope.create("LOAN_REJECTED", savedApp.getApplicationReference(), payload));
         }
 
         return mapToResponse(savedApp);
@@ -277,7 +274,7 @@ public class ManagerLoanService {
                     firstEmi.getDueDate(),
                     firstEmi.getEmiAmount()
             );
-            outboxService.saveEvent(repaymentEventsTopic, EventEnvelope.create("EMI_DUE", savedApp.getApplicationReference(), payload));
+            outboxService.saveEvent(REPAYMENT_EVENTS_TOPIC, EventEnvelope.create("EMI_DUE", savedApp.getApplicationReference(), payload));
         }
 
         String simulatedAccount = "3601" + String.format("%08d", app.getCustomer().getId());

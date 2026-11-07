@@ -38,8 +38,7 @@ public class CheckerLoanService {
     private final AppUserRepository appUserRepository;
     private final OutboxService outboxService;
 
-    @Value("${app.kafka.topics.kyc-events:kyc-events}")
-    private String kycEventsTopic = "kyc-events";
+    private static final String KYC_EVENTS_TOPIC = "kyc-events";
 
     @Autowired
     public CheckerLoanService(LoanApplicationRepository loanApplicationRepository,
@@ -171,7 +170,7 @@ public class CheckerLoanService {
                     reviewer,
                     savedDoc.getReviewedAt()
             );
-            outboxService.saveEvent(kycEventsTopic, EventEnvelope.create("KYC_DOCUMENT_VERIFIED", app.getApplicationReference(), payload));
+            outboxService.saveEvent(KYC_EVENTS_TOPIC, EventEnvelope.create("KYC_DOCUMENT_VERIFIED", app.getApplicationReference(), payload));
         }
 
         // If all documents for this application are now verified, transition status to DOCUMENTS_VERIFIED
@@ -248,7 +247,7 @@ public class CheckerLoanService {
                     reviewer,
                     savedDoc.getReviewedAt()
             );
-            outboxService.saveEvent(kycEventsTopic, EventEnvelope.create("KYC_DOCUMENT_REJECTED", app.getApplicationReference(), payload));
+            outboxService.saveEvent(KYC_EVENTS_TOPIC, EventEnvelope.create("KYC_DOCUMENT_REJECTED", app.getApplicationReference(), payload));
         }
 
         return mapToDocumentResponse(savedDoc);

@@ -26,49 +26,6 @@ spring:
         format_sql: false
     open-in-view: false
 
-  # Apache Kafka Configuration
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    admin:
-      fail-fast: false
-      auto-create: false
-    listener:
-      auto-startup: ${app.kafka.enabled:false}
-      ack-mode: RECORD
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      acks: all
-      retries: 3
-      properties:
-        enable.idempotence: true
-    consumer:
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
-      auto-offset-reset: earliest
-      enable-auto-commit: false
-      properties:
-        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
-        spring.json.trusted.packages: "com.bankcore360.*,java.util.*,java.lang.*"
-
-# BankCore360 Kafka Topics and Consumer Groups
-app:
-  kafka:
-    enabled: ${KAFKA_ENABLED:false}
-    topics:
-      loan-events: ${TOPIC_LOAN_EVENTS:loan-events}
-      kyc-events: ${TOPIC_KYC_EVENTS:kyc-events}
-      approval-events: ${TOPIC_APPROVAL_EVENTS:approval-events}
-      repayment-events: ${TOPIC_REPAYMENT_EVENTS:repayment-events}
-      notification-events: ${TOPIC_NOTIFICATION_EVENTS:notification-events}
-    consumer-groups:
-      loan: ${GROUP_LOAN:bankcore360-loan-group}
-      kyc: ${GROUP_KYC:bankcore360-kyc-group}
-      approval: ${GROUP_APPROVAL:bankcore360-approval-group}
-      repayment: ${GROUP_REPAYMENT:bankcore360-repayment-group}
-      notification: ${GROUP_NOTIFICATION:bankcore360-notification-group}
-      audit: ${GROUP_AUDIT:bankcore360-audit-group}
-
 # Server configuration
 server:
   port: ${PORT:8080}

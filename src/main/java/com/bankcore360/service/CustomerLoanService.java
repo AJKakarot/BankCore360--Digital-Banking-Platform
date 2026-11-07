@@ -43,11 +43,8 @@ public class CustomerLoanService {
     private final NotificationService notificationService;
     private final OutboxService outboxService;
 
-    @Value("${app.kafka.topics.loan-events:loan-events}")
-    private String loanEventsTopic = "loan-events";
-
-    @Value("${app.kafka.topics.repayment-events:repayment-events}")
-    private String repaymentEventsTopic = "repayment-events";
+    private static final String LOAN_EVENTS_TOPIC = "loan-events";
+    private static final String REPAYMENT_EVENTS_TOPIC = "repayment-events";
 
     @Autowired
     public CustomerLoanService(LoanApplicationRepository loanApplicationRepository,
@@ -130,7 +127,7 @@ public class CustomerLoanService {
                     savedApp.getRequestedAmount(),
                     savedApp.getSubmittedAt()
             );
-            outboxService.saveEvent(loanEventsTopic, EventEnvelope.create("LOAN_APPLICATION_SUBMITTED", savedApp.getApplicationReference(), payload));
+            outboxService.saveEvent(LOAN_EVENTS_TOPIC, EventEnvelope.create("LOAN_APPLICATION_SUBMITTED", savedApp.getApplicationReference(), payload));
         }
 
         return mapToResponse(savedApp);
@@ -295,7 +292,7 @@ public class CustomerLoanService {
                     savedRepayment.getPaymentReference(),
                     savedRepayment.getPaidAt()
             );
-            outboxService.saveEvent(repaymentEventsTopic, EventEnvelope.create("EMI_PAID", reference, payload));
+            outboxService.saveEvent(REPAYMENT_EVENTS_TOPIC, EventEnvelope.create("EMI_PAID", reference, payload));
         }
 
         return mapToRepaymentResponse(savedRepayment);
