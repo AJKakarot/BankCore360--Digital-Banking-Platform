@@ -50,12 +50,21 @@ public class FileStorageService {
             @Autowired(required = false) Cloudinary cloudinary
     ) {
         this.cloudinary = cloudinary;
-        this.storageLocation = Paths.get(storageDir).toAbsolutePath().normalize();
+        Path targetPath;
         try {
-            Files.createDirectories(this.storageLocation);
-        } catch (IOException ex) {
-            throw new RuntimeException("Could not initialize secure private storage directory: " + this.storageLocation, ex);
+            targetPath = Paths.get(storageDir).toAbsolutePath().normalize();
+            Files.createDirectories(targetPath);
+        } catch (Exception ex) {
+            log.warn("Could not initialize secure private storage directory [{}]: {}. Falling back to system temp.", storageDir, ex.getMessage());
+            try {
+                targetPath = Paths.get(System.getProperty("java.io.tmpdir"), "bankcore360", "kyc-documents").toAbsolutePath().normalize();
+                Files.createDirectories(targetPath);
+            } catch (Exception innerEx) {
+                log.warn("Could not create fallback temp directory: {}. Using root temp.", innerEx.getMessage());
+                targetPath = Paths.get(System.getProperty("java.io.tmpdir")).toAbsolutePath().normalize();
+            }
         }
+        this.storageLocation = targetPath;
     }
 
     public String storeFile(MultipartFile file, Long customerId, KycDocumentType documentType) {

@@ -20,12 +20,15 @@ RUN ./mvnw clean package -DskipTests -B
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Add unprivileged user for security
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# Add unprivileged user and pre-create storage directories with proper ownership
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup \
+    && mkdir -p /app/storage/private/loan-documents /app/storage/private/kyc-documents \
+    && chown -R appuser:appgroup /app
+
 USER appuser
 
 # Copy built artifact
-COPY --from=builder /app/target/*.jar app.jar
+COPY --chown=appuser:appgroup --from=builder /app/target/*.jar app.jar
 
 ENV PORT=8080
 ENV JAVA_OPTS="-Xmx384m -Xms128m -Xss512k -XX:+ExitOnOutOfMemoryError"

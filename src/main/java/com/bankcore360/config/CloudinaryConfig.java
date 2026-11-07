@@ -37,18 +37,23 @@ public class CloudinaryConfig {
 
     @Bean
     public Cloudinary cloudinary() {
-        if (StringUtils.hasText(cloudinaryUrl)) {
-            log.info("Cloudinary client initialized using CLOUDINARY_URL configuration.");
-            return new Cloudinary(cloudinaryUrl.trim());
-        }
+        try {
+            if (StringUtils.hasText(cloudinaryUrl)) {
+                log.info("Cloudinary client initialized using CLOUDINARY_URL configuration.");
+                return new Cloudinary(cloudinaryUrl.trim());
+            }
 
-        if (StringUtils.hasText(cloudName) && StringUtils.hasText(apiKey) && StringUtils.hasText(apiSecret)) {
-            log.info("Cloudinary client initialized for cloudName: {}", cloudName.trim());
-            Map<String, String> config = new HashMap<>();
-            config.put("cloud_name", cloudName.trim());
-            config.put("api_key", apiKey.trim());
-            config.put("api_secret", apiSecret.trim());
-            return new Cloudinary(config);
+            if (StringUtils.hasText(cloudName) && StringUtils.hasText(apiKey) && StringUtils.hasText(apiSecret)) {
+                log.info("Cloudinary client initialized for cloudName: {}", cloudName.trim());
+                Map<String, String> config = new HashMap<>();
+                config.put("cloud_name", cloudName.trim());
+                config.put("api_key", apiKey.trim());
+                config.put("api_secret", apiSecret.trim());
+                return new Cloudinary(config);
+            }
+        } catch (Exception ex) {
+            log.warn("Failed to initialize Cloudinary client ({}). Falling back to local storage.", ex.getMessage());
+            return null;
         }
 
         log.info("Cloudinary credentials not detected in environment. Using secure local filesystem storage fallback.");
