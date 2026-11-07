@@ -1,18 +1,26 @@
 package com.bankcore360.kafka.config;
 
+import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.TopicBuilder;
+import org.springframework.kafka.core.KafkaAdmin;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Declares Kafka topics and Dead Letter Topics (DLT) for BankCore360.
  */
 @Configuration
-@ConditionalOnProperty(name = "app.kafka.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.kafka.enabled", havingValue = "true", matchIfMissing = false)
 public class KafkaTopicConfig {
+
+    @Value("${spring.kafka.bootstrap-servers:localhost:9092}")
+    private String bootstrapServers;
 
     @Value("${app.kafka.topics.loan-events:loan-events}")
     private String loanEventsTopic;
@@ -28,6 +36,16 @@ public class KafkaTopicConfig {
 
     @Value("${app.kafka.topics.notification-events:notification-events}")
     private String notificationEventsTopic;
+
+    @Bean
+    public KafkaAdmin kafkaAdmin() {
+        Map<String, Object> configs = new HashMap<>();
+        configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        KafkaAdmin admin = new KafkaAdmin(configs);
+        admin.setFatalIfBrokerNotAvailable(false);
+        admin.setAutoCreate(false);
+        return admin;
+    }
 
     @Bean
     public NewTopic loanEventsTopic() {

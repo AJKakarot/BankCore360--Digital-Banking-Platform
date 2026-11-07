@@ -28,7 +28,8 @@ USER appuser
 COPY --from=builder /app/target/*.jar app.jar
 
 ENV PORT=8080
+ENV JAVA_OPTS="-Xmx384m -Xms128m -Xss512k -XX:+ExitOnOutOfMemoryError"
 EXPOSE 8080
 
-ENTRYPOINT ["sh", "-c", "java -Djava.security.egd=file:/dev/./urandom -Dserver.port=${PORT} -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -Dserver.port=${PORT:-8080} -jar app.jar"]
 

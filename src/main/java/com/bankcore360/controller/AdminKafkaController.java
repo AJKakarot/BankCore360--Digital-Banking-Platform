@@ -31,7 +31,7 @@ public class AdminKafkaController {
     private final OutboxEventRepository outboxEventRepository;
     private final ProcessedEventRepository processedEventRepository;
 
-    @Value("${app.kafka.enabled:true}")
+    @Value("${app.kafka.enabled:false}")
     private boolean kafkaEnabled;
 
     @Value("${spring.kafka.bootstrap-servers:localhost:9092}")

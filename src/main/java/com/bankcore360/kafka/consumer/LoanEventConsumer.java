@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Consumer for loan lifecycle events published to the loan-events topic.
  */
 @Component
-@ConditionalOnProperty(name = "app.kafka.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.kafka.enabled", havingValue = "true", matchIfMissing = false)
 public class LoanEventConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(LoanEventConsumer.class);

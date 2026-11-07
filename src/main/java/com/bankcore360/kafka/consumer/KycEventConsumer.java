@@ -29,7 +29,7 @@ import java.util.Optional;
  * Consumer for KYC document verification & rejection events on the kyc-events topic.
  */
 @Component
-@ConditionalOnProperty(name = "app.kafka.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.kafka.enabled", havingValue = "true", matchIfMissing = false)
 public class KycEventConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(KycEventConsumer.class);

@@ -44,17 +44,16 @@ public class SecurityDataInitializer implements CommandLineRunner {
     }
 
     private void seedOrUpdateUser(String username, String email, String rawPassword, UserRole role) {
-        AppUser user = appUserRepository.findByUsername(username).orElseGet(() -> {
-            AppUser newUser = new AppUser();
-            newUser.setUsername(username);
-            newUser.setEmail(email);
-            return newUser;
-        });
+        if (appUserRepository.findByUsername(username).isPresent()) {
+            return;
+        }
 
-        user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(rawPassword));
-        user.setRole(role);
-        user.setEnabled(true);
-        appUserRepository.save(user);
+        AppUser newUser = new AppUser();
+        newUser.setUsername(username);
+        newUser.setEmail(email);
+        newUser.setPassword(passwordEncoder.encode(rawPassword));
+        newUser.setRole(role);
+        newUser.setEnabled(true);
+        appUserRepository.save(newUser);
     }
 }

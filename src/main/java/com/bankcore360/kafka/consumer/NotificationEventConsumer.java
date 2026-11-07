@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Consumer for general notification events published to the notification-events topic.
  */
 @Component
-@ConditionalOnProperty(name = "app.kafka.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.kafka.enabled", havingValue = "true", matchIfMissing = false)
 public class NotificationEventConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(NotificationEventConsumer.class);

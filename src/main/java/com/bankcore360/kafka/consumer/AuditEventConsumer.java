@@ -21,7 +21,7 @@ import java.util.Map;
  * Ensures idempotent processing using event IDs.
  */
 @Component
-@ConditionalOnProperty(name = "app.kafka.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.kafka.enabled", havingValue = "true", matchIfMissing = false)
 public class AuditEventConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(AuditEventConsumer.class);

@@ -22,7 +22,7 @@ import java.util.Optional;
  * Consumer for EMI due, payment, and overdue events on repayment-events topic.
  */
 @Component
-@ConditionalOnProperty(name = "app.kafka.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.kafka.enabled", havingValue = "true", matchIfMissing = false)
 public class RepaymentEventConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(RepaymentEventConsumer.class);

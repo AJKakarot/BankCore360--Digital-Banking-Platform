@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -33,9 +34,9 @@ public class OutboxService {
 
     public OutboxService(
             OutboxEventRepository outboxEventRepository,
-            KafkaTemplate<String, Object> kafkaTemplate,
+            @Autowired(required = false) KafkaTemplate<String, Object> kafkaTemplate,
             ObjectMapper objectMapper,
-            @Value("${app.kafka.enabled:true}") boolean kafkaEnabled
+            @Value("${app.kafka.enabled:false}") boolean kafkaEnabled
     ) {
         this.outboxEventRepository = outboxEventRepository;
         this.kafkaTemplate = kafkaTemplate;
@@ -70,7 +71,7 @@ public class OutboxService {
     @Scheduled(fixedDelayString = "${app.kafka.outbox.poll-interval-ms:2000}")
     @Transactional
     public void publishPendingEvents() {
-        if (!kafkaEnabled) {
+        if (!kafkaEnabled || kafkaTemplate == null) {
             return;
         }
 
@@ -88,6 +89,9 @@ public class OutboxService {
 
     @Transactional
     public void publishSingleEvent(OutboxEvent event) {
+        if (!kafkaEnabled || kafkaTemplate == null) {
+            return;
+        }
         try {
             Object eventPayload = objectMapper.readValue(event.getPayloadJson(), Object.class);
 

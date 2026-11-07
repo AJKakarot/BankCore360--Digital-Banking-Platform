@@ -17,7 +17,7 @@ import org.springframework.util.backoff.FixedBackOff;
  * Configures Kafka listener container factory, retry handling, and Dead Letter Topic (DLT) routing.
  */
 @Configuration
-@ConditionalOnProperty(name = "app.kafka.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.kafka.enabled", havingValue = "true", matchIfMissing = false)
 public class KafkaConsumerConfig {
 
     private static final Logger log = LoggerFactory.getLogger(KafkaConsumerConfig.class);
