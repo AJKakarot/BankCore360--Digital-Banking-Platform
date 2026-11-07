@@ -1,5 +1,12 @@
 import json
-from langsmith import traceable
+
+try:
+    from langsmith import traceable
+except ImportError:
+    def traceable(*args, **kwargs):
+        def decorator(f):
+            return f
+        return decorator
 from .grok_client import ask_grok
 
 

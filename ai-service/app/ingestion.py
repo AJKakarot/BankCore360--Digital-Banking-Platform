@@ -2,7 +2,14 @@ import os
 import re
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-from langsmith import traceable
+
+try:
+    from langsmith import traceable
+except ImportError:
+    def traceable(*args, **kwargs):
+        def decorator(f):
+            return f
+        return decorator
 
 # Base directories
 BASE_DIR = Path(__file__).resolve().parent.parent

@@ -1,6 +1,13 @@
 from typing import TypedDict
 from langgraph.graph import StateGraph, START, END
-from langsmith import traceable
+
+try:
+    from langsmith import traceable
+except ImportError:
+    def traceable(*args, **kwargs):
+        def decorator(f):
+            return f
+        return decorator
 
 from .ingestion import (
     load_policy,

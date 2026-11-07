@@ -2,8 +2,19 @@ import os
 import re
 from pathlib import Path
 from dotenv import load_dotenv
-from openai import OpenAI
-from langsmith import traceable
+
+try:
+    from openai import OpenAI
+except ImportError:
+    OpenAI = None
+
+try:
+    from langsmith import traceable
+except ImportError:
+    def traceable(*args, **kwargs):
+        def decorator(f):
+            return f
+        return decorator
 
 # Load environment from ai-service/.env and root .env
 BASE_DIR = Path(__file__).resolve().parent.parent

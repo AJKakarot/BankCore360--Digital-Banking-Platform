@@ -4,7 +4,14 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, Hea
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
-from langsmith import traceable
+
+try:
+    from langsmith import traceable
+except ImportError:
+    def traceable(*args, **kwargs):
+        def decorator(f):
+            return f
+        return decorator
 
 from .graph import run_policy_graph
 from database import memory_vector_store
