@@ -38,7 +38,7 @@ public class AdminEventStreamController {
         this.processedEventRepository = processedEventRepository;
     }
 
-    @GetMapping({"/status", "/events"})
+    @GetMapping({"", "/", "/status", "/events"})
     @Operation(summary = "Get Event stream, Outbox event records, and audit status",
             description = "Returns real-time transactional outbox records and audit history")
     public ResponseEntity<EventStreamStatusResponse> getEventStreamStatus(
