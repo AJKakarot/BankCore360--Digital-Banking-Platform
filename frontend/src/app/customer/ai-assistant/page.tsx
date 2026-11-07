@@ -289,19 +289,47 @@ export default function AiAssistantPage() {
                         )}
                       </div>
 
-                      {/* Policy Citations */}
-                      {m.data?.sources && m.data.sources.length > 0 && !m.isTyping && (
+                      {/* Relevant Policies & Citations */}
+                      {((m.data?.relevantPolicies && m.data.relevantPolicies.length > 0) ||
+                        (m.data?.sources && m.data.sources.length > 0)) &&
+                        !m.isTyping && (
                         <div className="mt-3 pt-2.5 border-t border-[#262626] flex items-center flex-wrap gap-1.5">
                           <span className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider mr-1">
-                            Policy Citations:
+                            Governing Policies:
                           </span>
-                          {m.data.sources.map((s, idx) => (
+                          {m.data.relevantPolicies?.map((p, idx) => (
                             <span
-                              key={idx}
+                              key={"p-" + idx}
+                              className="inline-block px-2 py-0.5 rounded-full bg-[#1C1C1C] border border-[#333333] text-[10px] font-mono text-[#CAFF33]"
+                            >
+                              {p}
+                            </span>
+                          ))}
+                          {m.data.sources?.map((s, idx) => (
+                            <span
+                              key={"s-" + idx}
                               className="inline-block px-2 py-0.5 rounded-full bg-[#1C1C1C] border border-[#333333] text-[10px] font-mono text-[#CAFF33]"
                             >
                               {s.policy_id || s.documentName || "Policy Rule"}
                             </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Clickable Suggested Next Steps */}
+                      {m.data?.suggestedNextSteps && m.data.suggestedNextSteps.length > 0 && !m.isTyping && (
+                        <div className="mt-2.5 pt-2 border-t border-[#222222] flex items-center flex-wrap gap-2">
+                          <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider mr-1">
+                            Suggested Next Steps:
+                          </span>
+                          {m.data.suggestedNextSteps.map((step, idx) => (
+                            <button
+                              key={"step-" + idx}
+                              onClick={() => handleSend(step)}
+                              className="text-[11px] text-neutral-300 hover:text-white bg-[#222222] hover:bg-[#2A2A2A] px-2.5 py-1 rounded-full border border-[#333333] hover:border-[#CAFF33]/40 transition active:scale-95 text-left"
+                            >
+                              💬 {step}
+                            </button>
                           ))}
                         </div>
                       )}

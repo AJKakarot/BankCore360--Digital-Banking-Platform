@@ -104,11 +104,69 @@ public class AiAssistantService {
     private AiChatResponse generateFallbackRagResponse(AiChatRequest request) {
         String msg = request.getMessage().toLowerCase();
 
-        if (msg.contains("eligib") || msg.contains("salary") || msg.contains("income") || msg.contains("qualify")) {
+        if (msg.contains("hi") || msg.contains("hello") || msg.contains("hey") || msg.contains("namaste")) {
+            return new AiChatResponse(
+                    "Hello! I am your BankCore360 AI Banking Assistant. I can assist you with retail loan eligibility, reducing balance EMI calculation, KYC documentation, and Maker-Checker approval workflows. What can I help you with today?",
+                    "GREETING",
+                    List.of("BankCore360 Customer Self-Service Guidelines 2026"),
+                    List.of(
+                            "Check loan eligibility and income requirements",
+                            "Explore Personal, Home, Education, and Business loan limits",
+                            "Learn about required KYC documents and file formats"
+                    )
+            );
+        }
+
+        if (msg.contains("personal")) {
+            return new AiChatResponse(
+                    "BankCore360 Personal Loans offer quick financing from ₹25,000 to ₹10,00,000 with tenures up to 60 months. Interest rates range between 11.5% and 14.0% p.a. (reducing balance). Eligibility requires a minimum net monthly income of ₹15,000 and max FOIR of 50%.",
+                    "PRODUCT_INQUIRY_PERSONAL",
+                    List.of("Product Schedule: Personal Lending Guidelines 2026"),
+                    List.of("Apply online via /customer/apply", "Upload 3 months payslips and test PAN")
+            );
+        }
+
+        if (msg.contains("home") || msg.contains("house") || msg.contains("property")) {
+            return new AiChatResponse(
+                    "BankCore360 Home Loans provide housing finance from ₹5,00,000 to ₹1,50,00,000 with flexible repayment tenures up to 30 years (360 months). Competitive annual interest rates start from 8.75% to 9.50% p.a. Tax benefits apply under Section 80C and Section 24.",
+                    "PRODUCT_INQUIRY_HOME",
+                    List.of("Product Schedule: Housing Finance Policy 2026"),
+                    List.of("Check indicative EMI on the Loan Originator page", "Submit property title documents and bank statements")
+            );
+        }
+
+        if (msg.contains("education") || msg.contains("study") || msg.contains("college")) {
+            return new AiChatResponse(
+                    "BankCore360 Education Loans support students from ₹50,000 up to ₹30,00,000 at 9.0% to 11.0% p.a. for domestic and international courses. Includes a moratorium period (Course Duration + 6 months) before principal repayment commences.",
+                    "PRODUCT_INQUIRY_EDUCATION",
+                    List.of("Product Schedule: Higher Education Financing Policy 2026"),
+                    List.of("Provide admission offer letter and fee schedule", "Co-applicant income proof required")
+            );
+        }
+
+        if (msg.contains("business") || msg.contains("sme") || msg.contains("enterprise")) {
+            return new AiChatResponse(
+                    "BankCore360 Business Loans offer working capital and term loans from ₹1,00,000 to ₹50,00,000 with repayment tenures up to 84 months. Interest rates start at 12.0% p.a. tailored for growth enterprises and MSMEs.",
+                    "PRODUCT_INQUIRY_BUSINESS",
+                    List.of("Product Schedule: MSME & Commercial Credit Policy 2026"),
+                    List.of("Submit 12 months GST returns and audited balance sheet", "Operative business bank account statement")
+            );
+        }
+
+        if (msg.contains("status") || msg.contains("track") || msg.contains("where is my loan")) {
+            return new AiChatResponse(
+                    "You can track the live progress of your loan anytime under 'My Loan Applications' (/customer/applications). The stages proceed: SUBMITTED -> UNDER_REVIEW (Checker KYC verification) -> PENDING_MANAGER_APPROVAL -> APPROVED / DISBURSED.",
+                    "STATUS_TRACKING",
+                    List.of("Customer Service SOP: Real-time Lifecycle Visibility"),
+                    List.of("Open Portfolio dashboard to review current application stage", "Check real-time notifications for automated status updates")
+            );
+        }
+
+        if (msg.contains("eligib") || msg.contains("salary") || msg.contains("income") || msg.contains("qualify") || msg.contains("cibil")) {
             return new AiChatResponse(
                     "To qualify for a BankCore360 loan, your minimum monthly income should be at least ₹15,000. "
                             + "We evaluate eligibility using the Fixed Obligation to Income Ratio (FOIR), where your total monthly EMIs "
-                            + "(including the new loan) must not exceed 50% of your net monthly income.",
+                            + "(including the new loan) must not exceed 50% of your net monthly income. A preferred CIBIL score of 700+ ensures faster sanction.",
                     "ELIGIBILITY_INQUIRY",
                     List.of(
                             "BankCore360 Credit Policy Section 3.1: Minimum Monthly Income ₹15,000",
@@ -121,7 +179,7 @@ public class AiAssistantService {
             );
         }
 
-        if (msg.contains("document") || msg.contains("pan") || msg.contains("aadhaar") || msg.contains("upload")) {
+        if (msg.contains("document") || msg.contains("pan") || msg.contains("aadhaar") || msg.contains("upload") || msg.contains("proof")) {
             return new AiChatResponse(
                     "For loan processing, BankCore360 requires: (1) Identity Proof: Dummy PAN Card, "
                             + "(2) Address Proof: Dummy Aadhaar or Utility Bill, (3) Income Proof: Last 3 months payslips, "
