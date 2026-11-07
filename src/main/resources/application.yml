@@ -48,3 +48,12 @@ springdoc:
     tags-sorter: alpha
   api-docs:
     path: /v3/api-docs
+
+# Cloudinary Cloud Storage Configuration
+# Supports CLOUDINARY_URL (e.g. cloudinary://API_KEY:API_SECRET@CLOUD_NAME)
+# or explicit CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+cloudinary:
+  url: ${CLOUDINARY_URL:}
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:}
+  api-key: ${CLOUDINARY_API_KEY:}
+  api-secret: ${CLOUDINARY_API_SECRET:}

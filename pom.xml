@@ -36,6 +36,13 @@
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 
+		<!-- Cloudinary SDK for Cloud Document Storage -->
+		<dependency>
+			<groupId>com.cloudinary</groupId>
+			<artifactId>cloudinary-http44</artifactId>
+			<version>1.36.0</version>
+		</dependency>
+
 		<!-- Spring Data JPA for persistence layer -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
