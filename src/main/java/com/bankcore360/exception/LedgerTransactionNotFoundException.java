@@ -5,3 +5,4 @@ public class LedgerTransactionNotFoundException extends RuntimeException {
         super(message);
     }
 }
+

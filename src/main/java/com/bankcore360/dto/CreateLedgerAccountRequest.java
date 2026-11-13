@@ -96,3 +96,4 @@ public class CreateLedgerAccountRequest {
         this.initialBalance = initialBalance;
     }
 }
+

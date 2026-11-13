@@ -24,3 +24,4 @@ public interface AccountBalanceRepository extends JpaRepository<AccountBalance, 
     @Query("SELECT b FROM AccountBalance b WHERE b.account.accountNumber = :accountNumber")
     Optional<AccountBalance> findByAccountNumberWithLock(@Param("accountNumber") String accountNumber);
 }
+

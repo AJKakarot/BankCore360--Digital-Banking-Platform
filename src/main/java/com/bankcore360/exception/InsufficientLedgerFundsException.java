@@ -5,3 +5,4 @@ public class InsufficientLedgerFundsException extends RuntimeException {
         super(message);
     }
 }
+

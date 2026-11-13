@@ -13,3 +13,4 @@ public interface LedgerTransactionRepository extends JpaRepository<LedgerTransac
 
     boolean existsByIdempotencyKey(String idempotencyKey);
 }
+

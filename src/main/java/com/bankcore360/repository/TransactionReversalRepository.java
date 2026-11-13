@@ -13,3 +13,4 @@ public interface TransactionReversalRepository extends JpaRepository<Transaction
 
     boolean existsByOriginalTransactionId(Long originalTransactionId);
 }
+

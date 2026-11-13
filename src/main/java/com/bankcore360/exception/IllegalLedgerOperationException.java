@@ -5,3 +5,4 @@ public class IllegalLedgerOperationException extends RuntimeException {
         super(message);
     }
 }
+

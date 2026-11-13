@@ -19,3 +19,4 @@ public interface LedgerAccountRepository extends JpaRepository<LedgerAccount, Lo
 
     Optional<LedgerAccount> findByNameAndIsSystemAccountTrue(String name);
 }
+

@@ -304,3 +304,4 @@ public class LedgerServiceTest {
                 .hasMessageContaining("Double-entry violation! Total Debit (1000.00) does not equal Total Credit (950.00)");
     }
 }
+

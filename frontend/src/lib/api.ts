@@ -1499,3 +1499,109 @@ export async function fetchMyTransactions(): Promise<VaultTransaction[]> {
   return [];
 }
 
+// --- Fraud Detection & Compliance APIs (Module 2) ---
+
+export interface FraudAssessmentResponse {
+  id?: number;
+  assessmentReference: string;
+  accountNumber: string;
+  transactionType: string;
+  amount: number;
+  riskScore: number;
+  riskLevel: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  decision: "ALLOW" | "MANUAL_REVIEW" | "BLOCK";
+  triggeredRuleCodes: string[];
+  assessmentReasons: string;
+  evaluatedAt: string;
+}
+
+export interface FraudAlertItem {
+  id: number;
+  alertReference: string;
+  assessmentId?: number;
+  assessmentReference?: string;
+  accountNumber: string;
+  transactionReference?: string;
+  riskScore: number;
+  riskLevel: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  status: "PENDING_REVIEW" | "UNDER_INVESTIGATION" | "RESOLVED_CLEARED" | "CONFIRMED_FRAUD" | "FALSE_POSITIVE";
+  assignedReviewer?: string;
+  createdAt: string;
+  updatedAt: string;
+  assessmentDetails?: FraudAssessmentResponse;
+  investigations?: Array<{
+    id: number;
+    investigatorUsername: string;
+    actionTaken: string;
+    notes: string;
+    createdAt: string;
+  }>;
+}
+
+export async function evaluateFraud(req: {
+  accountNumber: string;
+  amount: number;
+  transactionType: string;
+  targetAccountNumber?: string;
+}): Promise<FraudAssessmentResponse> {
+  const res = await fetch(`${SPRING_BOOT_API}/api/fraud/evaluate`, {
+    method: "POST",
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(req),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Fraud evaluation failed");
+  }
+  return res.json();
+}
+
+export async function fetchFraudAlerts(status?: string): Promise<FraudAlertItem[]> {
+  try {
+    const url = status
+      ? `${SPRING_BOOT_API}/api/fraud/alerts?status=${encodeURIComponent(status)}`
+      : `${SPRING_BOOT_API}/api/fraud/alerts`;
+    const res = await fetch(url, { headers: getAuthHeaders() });
+    if (res.ok) {
+      const data = await res.json();
+      return data.content || data;
+    }
+  } catch {}
+  return [];
+}
+
+export async function updateFraudAlertStatus(
+  alertId: number,
+  status: string,
+  notes: string,
+  actionTaken?: string
+): Promise<FraudAlertItem> {
+  const res = await fetch(`${SPRING_BOOT_API}/api/fraud/alerts/${alertId}/status`, {
+    method: "PATCH",
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ status, notes, actionTaken }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Failed to update fraud alert status");
+  }
+  return res.json();
+}
+
+export async function fetchAccountRiskProfile(accountNumber: string): Promise<any> {
+  const res = await fetch(`${SPRING_BOOT_API}/api/fraud/accounts/${encodeURIComponent(accountNumber)}/risk-profile`, {
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    throw new Error("Failed to fetch risk profile");
+  }
+  return res.json();
+}
+
+

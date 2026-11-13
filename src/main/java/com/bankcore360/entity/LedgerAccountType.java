@@ -7,3 +7,4 @@ public enum LedgerAccountType {
     REVENUE,     // Normal balance: CREDIT (e.g., Interest Income, Processing Fees)
     EXPENSE      // Normal balance: DEBIT (e.g., Operating Expenses, Interest Paid)
 }
+

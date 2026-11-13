@@ -5,3 +5,4 @@ public class LedgerAccountNotFoundException extends RuntimeException {
         super(message);
     }
 }
+

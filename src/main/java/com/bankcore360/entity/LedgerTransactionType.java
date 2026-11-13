@@ -8,3 +8,4 @@ public enum LedgerTransactionType {
     REVERSAL,
     FEE
 }
+
