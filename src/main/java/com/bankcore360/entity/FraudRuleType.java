@@ -6,3 +6,4 @@ public enum FraudRuleType {
     RAPID_SUCCESSION,
     PATTERN_ANOMALY
 }
+

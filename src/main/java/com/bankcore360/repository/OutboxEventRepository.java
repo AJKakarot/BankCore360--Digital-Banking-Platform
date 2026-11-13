@@ -18,3 +18,4 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long> 
                                                     @Param("maxRetries") int maxRetries,
                                                     Pageable pageable);
 }
+

@@ -21,3 +21,4 @@ public interface FraudAlertRepository extends JpaRepository<FraudAlert, Long> {
 
     long countByStatus(FraudAlertStatus status);
 }
+

@@ -7,3 +7,4 @@ public enum FraudAlertStatus {
     CONFIRMED_FRAUD,
     FALSE_POSITIVE
 }
+

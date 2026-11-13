@@ -146,3 +146,4 @@ public class OutboxEvent {
         this.publishedAt = publishedAt;
     }
 }
+

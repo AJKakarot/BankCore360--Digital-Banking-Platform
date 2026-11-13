@@ -168,3 +168,4 @@ public class FraudAlert {
         return updatedAt;
     }
 }
+

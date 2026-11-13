@@ -9,3 +9,4 @@ public interface FraudInvestigationRepository extends JpaRepository<FraudInvesti
 
     List<FraudInvestigation> findByAlertIdOrderByCreatedAtDesc(Long alertId);
 }
+

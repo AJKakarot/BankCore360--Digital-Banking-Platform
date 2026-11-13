@@ -97,3 +97,4 @@ public class EvaluateFraudRequest {
         this.deviceId = deviceId;
     }
 }
+

@@ -6,3 +6,4 @@ public class FraudAlertNotFoundException extends RuntimeException {
         super(message);
     }
 }
+

@@ -14,3 +14,4 @@ public interface FraudRuleRepository extends JpaRepository<FraudRule, Long> {
 
     boolean existsByRuleCode(String ruleCode);
 }
+

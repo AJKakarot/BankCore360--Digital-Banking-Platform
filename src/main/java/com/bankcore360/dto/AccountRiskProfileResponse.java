@@ -106,3 +106,4 @@ public class AccountRiskProfileResponse {
         this.lastEvaluatedAt = lastEvaluatedAt;
     }
 }
+

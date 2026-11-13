@@ -16,3 +16,4 @@ public interface FraudAssessmentRepository extends JpaRepository<FraudAssessment
 
     Page<FraudAssessment> findByRiskLevelOrderByEvaluatedAtDesc(FraudRiskLevel riskLevel, Pageable pageable);
 }
+

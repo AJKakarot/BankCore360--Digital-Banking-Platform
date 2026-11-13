@@ -5,3 +5,4 @@ public enum FraudDecision {
     MANUAL_REVIEW,
     BLOCK
 }
+

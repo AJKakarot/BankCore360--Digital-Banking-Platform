@@ -68,3 +68,4 @@ public class KafkaConfig {
         return TopicBuilder.name(TOPIC_FRAUD_ALERT).partitions(3).replicas(1).build();
     }
 }
+

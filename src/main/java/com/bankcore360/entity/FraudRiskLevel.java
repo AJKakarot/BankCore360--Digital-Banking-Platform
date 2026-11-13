@@ -6,3 +6,4 @@ public enum FraudRiskLevel {
     HIGH,
     CRITICAL
 }
+

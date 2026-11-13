@@ -172,3 +172,4 @@ public class FraudAssessment {
         this.evaluatedAt = evaluatedAt;
     }
 }
+

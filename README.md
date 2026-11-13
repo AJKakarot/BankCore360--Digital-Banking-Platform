@@ -1,137 +1,108 @@
-# BankCore 360 — Educational Digital Banking Core
+# BankCore360 — Enterprise Digital Banking Platform
 
-BankCore 360 is a modern, modular digital banking core platform built with **Java 21** and **Spring Boot 3**. Designed for educational and enterprise-readiness exploration, it emphasizes clean layered architecture, robust domain modeling, resilience patterns, and secure financial data handling.
+BankCore360 is an enterprise-grade digital banking core and financial engineering platform built with **Java 21**, **Spring Boot 3.4**, **PostgreSQL**, **Redis**, **Apache Kafka**, and **React / Next.js**. Engineered as a high-performance **Modular Monolith**, it incorporates advanced financial invariants, immutable accounting, and real-time distributed fraud prevention.
 
 ---
 
-## 🏛 Layered Architecture
+## 🏛 Core Financial Engineering Modules
 
-BankCore 360 follows a strict separation of concerns with standard Spring enterprise layering under `com.bankcore360`:
+### Module 1: Double-Entry Accounting Ledger System
+- **Strict Invariant:** Every financial transaction produces balanced debit and credit entries where $\sum \text{Debit} == \sum \text{Credit}$.
+- **Normal Balance Formula:** 
+  - `ASSET` & `EXPENSE`: Debit Normal (Debits increase, Credits decrease)
+  - `LIABILITY`, `EQUITY` & `REVENUE`: Credit Normal (Credits increase, Debits decrease)
+- **Immutable Entries:** Posted records are permanent (`updatable = false`). Corrections use audit-linked compensating `REVERSAL` transactions.
+- **Deadlock-Free Concurrency:** Pessimistic write locking (`SELECT ... FOR UPDATE`) enforces deterministic ascending account ID lock ordering (`min(idA, idB)` followed by `max(idA, idB)`).
+- **Zero Floating-Point Drift:** Strict `BigDecimal` (precision 19, scale 4) throughout.
 
-```
-com.bankcore360/
-├── config/             # Spring configuration (CORS, Security, WebMvc)
-├── controller/         # REST API endpoints & Web controllers
-├── dto/                # Request / Response Data Transfer Objects (Records)
-├── entity/             # JPA Entities representing core domain models
-├── exception/          # Centralized exception handling & error models
-├── repository/         # Spring Data JPA persistence interfaces
-├── service/            # Core business logic and transaction boundaries
-└── BankCore360Application.java  # Main Spring Boot application entry point
-```
+### Module 2: Real-Time Fraud Detection Engine & Transactional Outbox
+- **Pre-Settlement Interceptor:** Evaluates transactions prior to ledger lock acquisition.
+- **Dynamic Rule Engine:** Database-driven rules (`fraud_rules`) for large amount spikes, hourly volume thresholds, and burst attempts.
+- **Redis Sliding-Window Velocity:** High-throughput sliding-window transaction counters and velocity tracking via Redis Sorted Sets (`ZSET`).
+- **Risk Classification:**
+  - `0 – 30`: Low Risk (Auto-approved)
+  - `31 – 60`: Medium Risk (Auto-approved with telemetry logging)
+  - `61 – 80`: High Risk (Held in `PENDING_REVIEW`; alert generated for compliance)
+  - `81 – 100`: Critical Risk (Hard blocked with HTTP 403; account flagged)
+- **Transactional Outbox Pattern:** Guarantees reliable, at-least-once event delivery to **Apache Kafka** (`bankcore360.transactions.*`, `bankcore360.fraud.alerts`) without dual-write inconsistency.
+- **Compliance Center:** Full frontend investigation portal (`/admin/fraud`) with live evaluation simulator and 1-click status transitions.
 
 ---
 
 ## 🚀 Tech Stack
 
-- **Java**: 21 (LTS)
-- **Framework**: Spring Boot 3.4.3
-- **Build Tool**: Maven (with Maven Wrapper `mvnw` included)
-- **Web**: Spring Web (RESTful API)
-- **Persistence**: Spring Data JPA & Hibernate
-- **Database**: PostgreSQL
-- **Validation**: Jakarta Bean Validation (`spring-boot-starter-validation`)
-- **Developer Experience**: Spring Boot DevTools
-- **Testing**: JUnit 5, MockMvc, AssertJ
+| Layer | Technologies |
+| :--- | :--- |
+| **Backend Core** | Java 21 (LTS), Spring Boot 3.4.3, Spring Security, Spring Data JPA |
+| **In-Memory & Cache** | Redis 7 Alpine, Spring Data Redis, Lettuce Client |
+| **Event Streaming** | Apache Kafka (KRaft Mode), Spring Kafka, Transactional Outbox |
+| **Relational Database** | PostgreSQL 16 (Neon Cloud / Local Docker) |
+| **Frontend UI** | Next.js 16 (App Router), React 19, Tailwind CSS, Lucide Icons |
+| **AI Service** | Python 3.11, FastAPI, LangChain, Grok / OpenAI Client |
+| **Containerization** | Docker, Docker Compose (Postgres, Redis, Kafka, App) |
+| **Testing** | JUnit 5, Mockito, AssertJ, Spring MockMvc (**203/203 Tests Passing**) |
 
 ---
 
-## 📋 Prerequisites
+## 🗺️ Engineering Phase Roadmap
 
-Before running the application, ensure you have:
-- **Java 21** or later installed (`java -version`)
-- **PostgreSQL 14+** running (optional for initial health check, required for database entities)
-- **Git**
-
----
-
-## ⚙️ Configuration & Environment Variables
-
-BankCore 360 adheres to the **Twelve-Factor App** methodology: **no database credentials or secrets are hardcoded**.
-
-All configuration is externalized via `src/main/resources/application.yml` and can be overridden via environment variables or a `.env` file:
-
-| Variable | Default Value | Description |
-|---|---|---|
-| `PORT` | `8080` | HTTP port for the web server |
-| `DB_HOST` | `localhost` | PostgreSQL host |
-| `DB_PORT` | `5432` | PostgreSQL port |
-| `DB_NAME` | `bankcore360` | Database name |
-| `DB_USERNAME` | `postgres` | Database user |
-| `DB_PASSWORD` | `postgres` | Database password |
-| `DB_URL` | *(auto-derived from host/port/name)* | Custom JDBC connection URL override |
-| `JPA_DDL_AUTO` | `none` | Hibernate DDL strategy (`none`, `validate`, `update`) |
-| `SHOW_SQL` | `false` | Enable SQL query logging |
-
-An environment template is provided in `.env.example`.
+- [x] **Phase 1**: Analyze architecture and design transaction pipeline
+- [x] **Phase 2**: Design database schema, entities, and financial invariants
+- [x] **Phase 3**: Implement production Double-Entry Ledger System
+- [x] **Phase 4**: Write comprehensive double-entry ledger unit & controller tests
+- [x] **Phase 5**: Implement Real-Time Fraud Detection & Scoring Engine
+- [x] **Phase 6**: Integrate Redis sliding-window velocity and Apache Kafka
+- [x] **Phase 7**: Implement Transactional Outbox and reliable event publisher worker
+- [x] **Phase 8**: Integrate Frontend Compliance & Fraud Dashboard (`/admin/fraud`)
+- [x] **Phase 9**: Dockerize infrastructure (`docker-compose.yml` for Postgres, Redis, Kafka, App)
+- [x] **Phase 10**: Prepare production-readiness checklist and FinTech interview dossier (`docs/FINTECH_SYSTEM_DESIGN_AND_INTERVIEW_GUIDE.md`)
 
 ---
 
-## 🛠️ Building & Running
+## 📋 Quickstart with Docker Compose
 
-### 1. Compile the Project
-Using the included Maven wrapper:
+Run the entire distributed banking infrastructure with a single command:
+
 ```bash
-./mvnw clean compile
+docker compose up -d
 ```
 
-Or with your local Maven installation:
-```bash
-mvn clean compile
-```
+This starts:
+1. **PostgreSQL 16** on `localhost:5432`
+2. **Redis 7** on `localhost:6379`
+3. **Apache Kafka (KRaft)** on `localhost:9092`
+4. **BankCore360 Monolith** on `localhost:8080`
 
-### 2. Run Tests
+### Running Backend Locally
 ```bash
-./mvnw test
-```
+# Execute complete test suite (203 tests)
+./mvnw clean test
 
-### 3. Run the Application Locally
-You can run the application directly with Spring Boot:
-```bash
+# Run Spring Boot application
 ./mvnw spring-boot:run
 ```
 
-With custom database environment variables:
-```bash
-DB_HOST=localhost DB_PORT=5432 DB_NAME=bankcore360 DB_USERNAME=myuser DB_PASSWORD=secret ./mvnw spring-boot:run
-```
+---
 
-### 4. Build a Production JAR
-```bash
-./mvnw clean package -DskipTests
-java -jar target/bankcore360-0.0.1-SNAPSHOT.jar
-```
+## 🔌 Core API Reference
+
+### Double-Entry Ledger APIs (`/api/ledger`)
+- `POST /api/ledger/deposit` — Balanced deposit (Debit Vault Asset, Credit Account Liability)
+- `POST /api/ledger/withdraw` — Balanced withdrawal (Debit Account Liability, Credit Vault Asset)
+- `POST /api/ledger/transfer` — Deadlock-free P2P transfer (Debit Sender, Credit Recipient)
+- `GET /api/ledger/accounts/{id}/entries` — Paginated immutable ledger statement
+- `GET /api/ledger/transactions/{id}` — Full transaction breakdown with entry splits
+- `POST /api/ledger/transactions/{id}/reverse` — Immutable compensating reversal
+
+### Fraud Detection & Compliance APIs (`/api/fraud`)
+- `POST /api/fraud/evaluate` — Pre-settlement transaction risk assessment (0–100 score)
+- `GET /api/fraud/alerts` — Paginated suspicious transaction alerts
+- `GET /api/fraud/alerts/{id}` — Alert investigation history & audit trail
+- `PATCH /api/fraud/alerts/{id}/status` — Compliance reviewer status updates & notes
+- `GET /api/fraud/accounts/{id}/risk-profile` — Aggregated account risk profile
 
 ---
 
-## 🩺 API Endpoints (Initial Bootstrap)
-
-### Health Check
-Returns the operational status of the service.
-
-- **URL**: `/api/health`
-- **Method**: `GET`
-- **Headers**: `Accept: application/json`
-- **Response Status**: `200 OK`
-- **Response Body**:
-```json
-{
-  "status": "UP",
-  "application": "BankCore360"
-}
-```
-
-#### Test with cURL:
-```bash
-curl -i http://localhost:8080/api/health
-```
-
----
-
-## 🗺️ Roadmap
-
-- [ ] **Phase 2**: Customer & Account domain entities (Checking, Savings)
-- [ ] **Phase 3**: Double-entry ledger and money movement engine
-- [ ] **Phase 4**: Spring Security, JWT authentication & RBAC
-- [x] **Phase 5**: Transactional Outbox Event Architecture with PostgreSQL Audit Trails
-- [ ] **Phase 6**: AI Financial Assistant & Transaction Enrichment
+## 📚 Technical Documentation
+For in-depth architectural diagrams, financial invariants, and FinTech system design interview questions, see:  
+👉 [docs/FINTECH_SYSTEM_DESIGN_AND_INTERVIEW_GUIDE.md](docs/FINTECH_SYSTEM_DESIGN_AND_INTERVIEW_GUIDE.md)

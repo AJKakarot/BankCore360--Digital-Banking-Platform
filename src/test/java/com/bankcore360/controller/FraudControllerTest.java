@@ -159,3 +159,4 @@ public class FraudControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 }
+

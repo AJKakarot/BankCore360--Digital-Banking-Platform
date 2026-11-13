@@ -164,3 +164,4 @@ public class FraudRule {
         return updatedAt;
     }
 }
+

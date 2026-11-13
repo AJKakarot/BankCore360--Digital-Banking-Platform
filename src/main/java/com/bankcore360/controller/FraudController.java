@@ -75,3 +75,4 @@ public class FraudController {
         return ResponseEntity.ok(response);
     }
 }
+

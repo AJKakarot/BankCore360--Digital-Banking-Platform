@@ -123,3 +123,4 @@ public class RedisVelocityService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }
+

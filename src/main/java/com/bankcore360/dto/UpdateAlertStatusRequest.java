@@ -47,3 +47,4 @@ public class UpdateAlertStatusRequest {
         this.actionTaken = actionTaken;
     }
 }
+
