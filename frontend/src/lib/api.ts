@@ -1190,16 +1190,20 @@ export async function disburseCustomerLoan(reference: string, applicationId?: nu
     if (res.ok) {
       return await res.json();
     }
-    // If returned error from backend, check for already disbursed idempotency
-    if (res.status !== 404) {
-      const err = await res.json().catch(() => ({}));
-      if (err.message && err.message.toLowerCase().includes("disbursed")) {
-        return { status: "DISBURSED", applicationReference: reference, message: err.message };
-      }
+    const err = await res.json().catch(() => ({}));
+    // If returned error from backend indicates already disbursed, treat as successful idempotent operation
+    if (err.message && err.message.toLowerCase().includes("disbursed")) {
+      return { status: "DISBURSED", applicationReference: reference, message: err.message };
+    }
+    // If endpoint doesn't exist (404 / No static resource / Method Not Allowed), proceed to fallback
+    const isMissingEndpoint = res.status === 404 || res.status === 405 ||
+      (err.message && err.message.toLowerCase().includes("no static resource"));
+    if (!isMissingEndpoint) {
       throw new Error(err.message || "Failed to disburse approved loan to account");
     }
   } catch (netErr: any) {
-    if (netErr.message && !netErr.message.includes("404") && !netErr.message.includes("No static resource")) {
+    const msg = (netErr.message || "").toLowerCase();
+    if (!msg.includes("404") && !msg.includes("no static resource") && !msg.includes("fetch failed") && !msg.includes("failed to fetch")) {
       throw netErr;
     }
   }
@@ -1236,11 +1240,14 @@ export async function disburseCustomerLoan(reference: string, applicationId?: nu
       if (mgrErr.message && mgrErr.message.toLowerCase().includes("disbursed")) {
         return { status: "DISBURSED", applicationReference: reference, message: mgrErr.message };
       }
-      if (mgrRes.status !== 404) {
+      const isMissingMgr = mgrRes.status === 404 || mgrRes.status === 405 ||
+        (mgrErr.message && mgrErr.message.toLowerCase().includes("no static resource"));
+      if (!isMissingMgr) {
         throw new Error(mgrErr.message || "Manager disbursement execution failed");
       }
     } catch (e: any) {
-      if (e.message && !e.message.includes("404") && !e.message.includes("No static resource")) {
+      const msg = (e.message || "").toLowerCase();
+      if (!msg.includes("404") && !msg.includes("no static resource") && !msg.includes("fetch failed") && !msg.includes("failed to fetch")) {
         throw e;
       }
     }

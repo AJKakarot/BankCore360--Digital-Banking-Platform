@@ -39,6 +39,9 @@ export default function ApplicationsPage() {
         "🎉 Funds Disbursed!",
         `₹${(app.approvedAmount || app.requestedAmount).toLocaleString()} credited to your Operative Account from Bank Vault!`
       );
+      setApplications((prev) =>
+        prev.map((a) => (a.applicationReference === app.applicationReference ? { ...a, status: "DISBURSED" } : a))
+      );
       loadData();
       if (selectedApp?.id === app.id) {
         setSelectedApp(null);

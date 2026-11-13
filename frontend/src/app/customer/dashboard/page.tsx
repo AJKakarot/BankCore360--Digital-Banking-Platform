@@ -190,6 +190,10 @@ export default function CustomerDashboard() {
         "🎉 Funds Disbursed to Account!",
         `Loan amount successfully transferred from Central Bank Vault into your Operative Account.`
       );
+      // Immediately transition status locally so the green claim banner resolves instantly
+      setApplications((prev) =>
+        prev.map((a) => (a.applicationReference === ref ? { ...a, status: "DISBURSED" } : a))
+      );
       await loadDashboardData();
     } catch (err: any) {
       toast.error("Disbursement Failed", err.message || "Failed to disburse loan funds");
