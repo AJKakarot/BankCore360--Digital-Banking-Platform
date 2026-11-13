@@ -141,6 +141,13 @@ public class FraudDetectionService {
             }
         }
 
+        // 5. Fail-Safe Defense: If Redis is in degraded mode and transaction is non-trivial, apply conservative security hold
+        if (redisVelocityService.isDegradedMode() && request.getAmount().compareTo(new BigDecimal("50000.00")) >= 0) {
+            totalRiskScore += 35;
+            triggeredRuleCodes.add("RULE_FAIL_SAFE_DEGRADED_VELOCITY");
+            reasons.add("FAIL-SAFE ACTIVATED: Velocity engine operating in degraded mode. Conservative risk hold applied (+35 pts).");
+        }
+
         // Cap risk score at 100
         int finalScore = Math.min(100, Math.max(0, totalRiskScore));
 

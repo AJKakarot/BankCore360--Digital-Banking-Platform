@@ -1,7 +1,9 @@
 package com.bankcore360.config;
 
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,15 +11,19 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.annotation.EnableKafka;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.TopicBuilder;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.core.*;
+import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.util.backoff.FixedBackOff;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
+@EnableKafka
 public class KafkaConfig {
 
     private static final Logger log = LoggerFactory.getLogger(KafkaConfig.class);
@@ -29,6 +35,7 @@ public class KafkaConfig {
     public static final String TOPIC_TXN_APPROVED = "bankcore360.transactions.approved";
     public static final String TOPIC_TXN_FLAGGED = "bankcore360.transactions.flagged";
     public static final String TOPIC_FRAUD_ALERT = "bankcore360.fraud.alerts";
+    public static final String TOPIC_FRAUD_ALERT_DLT = "bankcore360.fraud.alerts.DLT";
 
     @Bean
     public ProducerFactory<String, String> producerFactory() {
@@ -46,6 +53,38 @@ public class KafkaConfig {
     @ConditionalOnMissingBean
     public KafkaTemplate<String, String> kafkaTemplate(ProducerFactory<String, String> producerFactory) {
         return new KafkaTemplate<>(producerFactory);
+    }
+
+    @Bean
+    public ConsumerFactory<String, String> consumerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "bankcore360-core-group");
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        return new DefaultKafkaConsumerFactory<>(props);
+    }
+
+    /**
+     * Configures resilient consumer listener container with Dead Letter Queue (DLQ).
+     * If message processing fails after 3 retries, DeadLetterPublishingRecoverer dispatches
+     * the message to <originalTopic>.DLT for audit and recovery.
+     */
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
+            ConsumerFactory<String, String> consumerFactory,
+            KafkaTemplate<String, String> kafkaTemplate) {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory);
+
+        // Dead Letter Queue recoverer sending failed messages to topic.DLT
+        DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate);
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler(recoverer, new FixedBackOff(1000L, 3L));
+        factory.setCommonErrorHandler(errorHandler);
+
+        return factory;
     }
 
     @Bean
@@ -67,5 +106,9 @@ public class KafkaConfig {
     public NewTopic topicFraudAlert() {
         return TopicBuilder.name(TOPIC_FRAUD_ALERT).partitions(3).replicas(1).build();
     }
-}
 
+    @Bean
+    public NewTopic topicFraudAlertDlt() {
+        return TopicBuilder.name(TOPIC_FRAUD_ALERT_DLT).partitions(3).replicas(1).build();
+    }
+}

@@ -492,8 +492,14 @@ public class LedgerService {
         LedgerTransaction originalTxn = ledgerTransactionRepository.findById(transactionId)
                 .orElseThrow(() -> new LedgerTransactionNotFoundException("Transaction not found to reverse with id: " + transactionId));
 
+        if (originalTxn.getTransactionType() == LedgerTransactionType.REVERSAL) {
+            throw new IllegalLedgerOperationException("Cannot reverse a transaction of type REVERSAL: " + originalTxn.getTransactionReference());
+        }
         if (originalTxn.getStatus() == LedgerTransactionStatus.REVERSED) {
             throw new IllegalLedgerOperationException("Transaction " + originalTxn.getTransactionReference() + " is already REVERSED");
+        }
+        if (originalTxn.getStatus() != LedgerTransactionStatus.POSTED) {
+            throw new IllegalLedgerOperationException("Only POSTED transactions can be reversed. Current status: " + originalTxn.getStatus());
         }
         if (transactionReversalRepository.existsByOriginalTransactionId(transactionId)) {
             throw new IllegalLedgerOperationException("A reversal record already exists for transaction " + originalTxn.getTransactionReference());

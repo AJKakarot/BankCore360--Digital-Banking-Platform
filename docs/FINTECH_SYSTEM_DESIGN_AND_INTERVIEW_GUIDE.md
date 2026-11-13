@@ -206,3 +206,4 @@ public void processPayment() {
 
 ### Q4: How does BankCore360 guarantee idempotent payment requests?
 **Answer:** Each mutation API accepts an `idempotencyKey` provided by the client. Before executing business logic, `LedgerTransactionRepository.findByIdempotencyKey(key)` checks if a transaction with that key already exists. If found, the existing transaction response is returned immediately without executing debit/credit operations again.
+

@@ -23,12 +23,21 @@ public class RedisVelocityService {
 
     // Local in-memory sliding-window fallback if Redis cluster is temporarily unreachable
     private final Map<String, ConcurrentLinkedQueue<WindowEntry>> localFallbackStore = new ConcurrentHashMap<>();
+    private volatile boolean degradedMode = false;
 
     private record WindowEntry(long timestamp, BigDecimal amount, String ref) {}
 
     @Autowired
     public RedisVelocityService(@Autowired(required = false) StringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
+    }
+
+    public boolean isDegradedMode() {
+        return degradedMode;
+    }
+
+    public void setDegradedMode(boolean degraded) {
+        this.degradedMode = degraded;
     }
 
     /**
@@ -46,6 +55,7 @@ public class RedisVelocityService {
                 return;
             }
         } catch (Exception e) {
+            this.degradedMode = true;
             log.warn("Redis unavailable for recordTransaction; falling back to local memory buffer: {}", e.getMessage());
         }
 

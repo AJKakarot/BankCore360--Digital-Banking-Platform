@@ -292,6 +292,40 @@ public class LedgerServiceTest {
     }
 
     @Test
+    @DisplayName("Should prevent duplicate reversal when transaction is already REVERSED")
+    void testCannotReverseAlreadyReversedTransaction() {
+        LedgerTransaction txn = new LedgerTransaction("TXN-1", "K1", LedgerTransactionType.DEPOSIT,
+                new BigDecimal("1000.00"), "INR", "desc", "user");
+        txn.setId(77L);
+        txn.setStatus(LedgerTransactionStatus.REVERSED);
+
+        when(ledgerTransactionRepository.findById(77L)).thenReturn(Optional.of(txn));
+
+        LedgerReversalRequest req = new LedgerReversalRequest("Duplicate reversal test", "REV-K-DUP");
+
+        assertThatThrownBy(() -> ledgerService.reverseTransaction(77L, req, "admin"))
+                .isInstanceOf(IllegalLedgerOperationException.class)
+                .hasMessageContaining("already REVERSED");
+    }
+
+    @Test
+    @DisplayName("Should strictly prevent reversing a transaction of type REVERSAL")
+    void testCannotReverseReversalTransactionType() {
+        LedgerTransaction revTxn = new LedgerTransaction("REV-1", "K2", LedgerTransactionType.REVERSAL,
+                new BigDecimal("1000.00"), "INR", "reversal", "user");
+        revTxn.setId(88L);
+        revTxn.setStatus(LedgerTransactionStatus.POSTED);
+
+        when(ledgerTransactionRepository.findById(88L)).thenReturn(Optional.of(revTxn));
+
+        LedgerReversalRequest req = new LedgerReversalRequest("Attempt reverse reversal", "REV-K-3");
+
+        assertThatThrownBy(() -> ledgerService.reverseTransaction(88L, req, "admin"))
+                .isInstanceOf(IllegalLedgerOperationException.class)
+                .hasMessageContaining("Cannot reverse a transaction of type REVERSAL");
+    }
+
+    @Test
     @DisplayName("Should throw UnbalancedLedgerTransactionException when sum of Debits != sum of Credits")
     void testValidateUnbalancedTransactionThrows() {
         LedgerEntry entry1 = new LedgerEntry("E1", vaultAccount, LedgerEntryDirection.DEBIT,
