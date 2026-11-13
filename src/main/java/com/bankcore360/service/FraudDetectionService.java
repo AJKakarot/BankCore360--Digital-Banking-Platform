@@ -5,6 +5,7 @@ import com.bankcore360.dto.*;
 import com.bankcore360.entity.*;
 import com.bankcore360.exception.FraudAlertNotFoundException;
 import com.bankcore360.exception.FraudulentTransactionException;
+import com.bankcore360.observability.FintechMetricsService;
 import com.bankcore360.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ public class FraudDetectionService {
     private final TransactionalOutboxService transactionalOutboxService;
     private final NotificationService notificationService;
     private final CustomerRepository customerRepository;
+    private FintechMetricsService fintechMetricsService;
 
     public FraudDetectionService(FraudRuleRepository fraudRuleRepository,
                                  FraudAssessmentRepository fraudAssessmentRepository,
@@ -48,6 +50,11 @@ public class FraudDetectionService {
         this.transactionalOutboxService = transactionalOutboxService;
         this.notificationService = notificationService;
         this.customerRepository = customerRepository;
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setFintechMetricsService(FintechMetricsService fintechMetricsService) {
+        this.fintechMetricsService = fintechMetricsService;
     }
 
     /**
@@ -198,6 +205,9 @@ public class FraudDetectionService {
                 String.join(" | ", reasons)
         );
         FraudAssessment savedAssessment = fraudAssessmentRepository.save(assessment);
+        if (fintechMetricsService != null) {
+            fintechMetricsService.recordFraudEvaluation(decision.name(), riskLevel.name());
+        }
 
         // Record event into Redis velocity tracker for ongoing sliding window monitoring
         redisVelocityService.recordTransaction(request.getAccountNumber(), request.getAmount(), asmRef);

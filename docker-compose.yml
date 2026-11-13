@@ -82,6 +82,43 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # 5. Prometheus Time-Series Metrics Scraper
+  prometheus:
+    image: prom/prometheus:v2.50.1
+    container_name: bankcore360-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  # 6. Grafana Visualization & Enterprise Observability Dashboards
+  grafana:
+    image: grafana/grafana:10.3.3
+    container_name: bankcore360-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./docker/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./docker/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./docker/grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
 volumes:
   postgres_data:
     name: bankcore360_postgres_data
@@ -89,3 +126,7 @@ volumes:
     name: bankcore360_redis_data
   kafka_data:
     name: bankcore360_kafka_data
+  prometheus_data:
+    name: bankcore360_prometheus_data
+  grafana_data:
+    name: bankcore360_grafana_data

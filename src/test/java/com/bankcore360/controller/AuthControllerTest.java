@@ -40,6 +40,12 @@ class AuthControllerTest {
     @MockitoBean
     private AuthService authService;
 
+    @MockitoBean
+    private com.bankcore360.service.SessionManagementService sessionManagementService;
+
+    @MockitoBean
+    private com.bankcore360.repository.AppUserRepository appUserRepository;
+
     @Test
     @DisplayName("POST /api/auth/register with valid payload should return 201 and safe UserResponse")
     void shouldRegisterCustomerSuccessfully() throws Exception {
@@ -135,6 +141,7 @@ class AuthControllerTest {
         LoginRequest request = new LoginRequest("dev_checker", "devPassword123!");
         LoginResponse response = new LoginResponse("Login successful", 2L, "dev_checker", "dev_checker@bankcore360.com", UserRole.CHECKER);
 
+        when(authService.login(any(LoginRequest.class), any())).thenReturn(response);
         when(authService.login(any(LoginRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/auth/login")
@@ -154,6 +161,8 @@ class AuthControllerTest {
     void shouldReturnUnauthorizedOnInvalidPassword() throws Exception {
         LoginRequest request = new LoginRequest("dev_checker", "wrong-password");
 
+        when(authService.login(any(LoginRequest.class), any()))
+                .thenThrow(new BadCredentialsException("Bad credentials"));
         when(authService.login(any(LoginRequest.class)))
                 .thenThrow(new BadCredentialsException("Bad credentials"));
 

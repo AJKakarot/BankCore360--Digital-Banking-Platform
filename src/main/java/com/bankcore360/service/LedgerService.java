@@ -3,6 +3,7 @@ package com.bankcore360.service;
 import com.bankcore360.dto.*;
 import com.bankcore360.entity.*;
 import com.bankcore360.exception.*;
+import com.bankcore360.observability.FintechMetricsService;
 import com.bankcore360.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ public class LedgerService {
     private final LedgerEntryRepository ledgerEntryRepository;
     private final TransactionReversalRepository transactionReversalRepository;
     private final CustomerRepository customerRepository;
+    private FintechMetricsService fintechMetricsService;
 
     public LedgerService(LedgerAccountRepository ledgerAccountRepository,
                          AccountBalanceRepository accountBalanceRepository,
@@ -42,6 +44,11 @@ public class LedgerService {
         this.ledgerEntryRepository = ledgerEntryRepository;
         this.transactionReversalRepository = transactionReversalRepository;
         this.customerRepository = customerRepository;
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setFintechMetricsService(FintechMetricsService fintechMetricsService) {
+        this.fintechMetricsService = fintechMetricsService;
     }
 
     /**
@@ -195,6 +202,9 @@ public class LedgerService {
                 initiatedBy
         );
         LedgerTransaction savedTxn = ledgerTransactionRepository.save(txn);
+        if (fintechMetricsService != null) {
+            fintechMetricsService.recordLedgerTransaction("DEPOSIT", "POSTED", request.getAmount());
+        }
 
         // Vault: ASSET normal debit -> DEBIT increases vault asset
         BigDecimal vaultNewBal = applyEntryToBalance(vaultAccount.getAccountType(), vaultBalance.getCurrentBalance(),
@@ -304,6 +314,9 @@ public class LedgerService {
                 initiatedBy
         );
         LedgerTransaction savedTxn = ledgerTransactionRepository.save(txn);
+        if (fintechMetricsService != null) {
+            fintechMetricsService.recordLedgerTransaction("WITHDRAWAL", "POSTED", request.getAmount());
+        }
 
         // Customer: LIABILITY normal credit -> DEBIT decreases customer liability
         BigDecimal custNewBal = applyEntryToBalance(custAccount.getAccountType(), custBalance.getCurrentBalance(),
@@ -420,6 +433,9 @@ public class LedgerService {
                 initiatedBy
         );
         LedgerTransaction savedTxn = ledgerTransactionRepository.save(txn);
+        if (fintechMetricsService != null) {
+            fintechMetricsService.recordLedgerTransaction("TRANSFER", "POSTED", request.getAmount());
+        }
 
         // Sender: DEBIT decreases liability/balance
         BigDecimal srcNewBal = applyEntryToBalance(srcAccount.getAccountType(), srcBalance.getCurrentBalance(),
@@ -537,6 +553,9 @@ public class LedgerService {
                 initiatedBy
         );
         LedgerTransaction savedRevTxn = ledgerTransactionRepository.save(revTxn);
+        if (fintechMetricsService != null) {
+            fintechMetricsService.recordLedgerTransaction("REVERSAL", "POSTED", revTxn.getAmount());
+        }
 
         List<LedgerEntry> reversalEntries = new ArrayList<>();
         int order = 1;

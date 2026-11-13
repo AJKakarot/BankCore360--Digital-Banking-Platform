@@ -137,3 +137,4 @@ public class LedgerConcurrencyTest {
         verify(ledgerEntryRepository, times(threadCount)).saveAll(any());
     }
 }
+

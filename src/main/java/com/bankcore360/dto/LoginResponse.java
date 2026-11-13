@@ -10,6 +10,13 @@ public class LoginResponse {
     private String email;
     private UserRole role;
 
+    // Advanced Security Additions
+    private String accessToken;
+    private String refreshToken;
+    private String tokenType = "Bearer";
+    private boolean mfaRequired = false;
+    private String mfaTicket;
+
     public LoginResponse() {
     }
 
@@ -19,6 +26,26 @@ public class LoginResponse {
         this.username = username;
         this.email = email;
         this.role = role;
+    }
+
+    public LoginResponse(String message, Long id, String username, String email, UserRole role,
+                         String accessToken, String refreshToken) {
+        this.message = message;
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.role = role;
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+        this.tokenType = "Bearer";
+        this.mfaRequired = false;
+    }
+
+    public static LoginResponse mfaRequired(String mfaTicket, Long id, String username, String email, UserRole role) {
+        LoginResponse resp = new LoginResponse("MFA verification required", id, username, email, role);
+        resp.setMfaRequired(true);
+        resp.setMfaTicket(mfaTicket);
+        return resp;
     }
 
     public String getMessage() {
@@ -60,5 +87,44 @@ public class LoginResponse {
     public void setRole(UserRole role) {
         this.role = role;
     }
-}
 
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public String getTokenType() {
+        return tokenType;
+    }
+
+    public void setTokenType(String tokenType) {
+        this.tokenType = tokenType;
+    }
+
+    public boolean isMfaRequired() {
+        return mfaRequired;
+    }
+
+    public void setMfaRequired(boolean mfaRequired) {
+        this.mfaRequired = mfaRequired;
+    }
+
+    public String getMfaTicket() {
+        return mfaTicket;
+    }
+
+    public void setMfaTicket(String mfaTicket) {
+        this.mfaTicket = mfaTicket;
+    }
+}

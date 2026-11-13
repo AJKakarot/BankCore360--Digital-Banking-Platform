@@ -30,6 +30,10 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final CustomerRepository customerRepository;
 
+    private TokenRotationService tokenRotationService;
+    private MfaService mfaService;
+    private SessionManagementService sessionManagementService;
+
     @Autowired
     public AuthService(AppUserRepository appUserRepository,
                        PasswordEncoder passwordEncoder,
@@ -45,6 +49,21 @@ public class AuthService {
                        PasswordEncoder passwordEncoder,
                        AuthenticationManager authenticationManager) {
         this(appUserRepository, passwordEncoder, authenticationManager, null);
+    }
+
+    @Autowired
+    public void setTokenRotationService(TokenRotationService tokenRotationService) {
+        this.tokenRotationService = tokenRotationService;
+    }
+
+    @Autowired
+    public void setMfaService(MfaService mfaService) {
+        this.mfaService = mfaService;
+    }
+
+    @Autowired
+    public void setSessionManagementService(SessionManagementService sessionManagementService) {
+        this.sessionManagementService = sessionManagementService;
     }
 
     @Transactional
@@ -83,6 +102,10 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest request) {
+        return login(request, null);
+    }
+
+    public LoginResponse login(LoginRequest request, jakarta.servlet.http.HttpServletRequest httpRequest) {
         String trimmedUsername = request.getUsername().trim();
         String rawPassword = request.getPassword();
 
@@ -116,13 +139,96 @@ public class AuthService {
                 .or(() -> appUserRepository.findByEmail(trimmedUsername.toLowerCase()))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + trimmedUsername));
 
+        // 1. Check Multi-Factor Authentication requirement
+        if (user.isMfaEnabled() && mfaService != null) {
+            String otp = mfaService.generateAndStoreOtp(user.getUsername());
+            String ticket = mfaService.createMfaTicket(user.getUsername());
+            // In demo/educational banking, OTP is delivered in logs and response ticket
+            return LoginResponse.mfaRequired(ticket, user.getId(), user.getUsername(), user.getEmail(), user.getRole());
+        }
+
+        // 2. Issue Token Pair & Register Session
+        String accessToken = null;
+        String refreshToken = null;
+        if (tokenRotationService != null) {
+            UserResponse ur = mapToUserResponse(user);
+            com.bankcore360.dto.AuthTokenResponse tokens = tokenRotationService.issueTokenPair(user, ur);
+            accessToken = tokens.getAccessToken();
+            refreshToken = tokens.getRefreshToken();
+        }
+
+        if (sessionManagementService != null && httpRequest != null) {
+            sessionManagementService.registerSession(user, httpRequest);
+        }
+
         return new LoginResponse(
                 "Login successful",
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
-                user.getRole()
+                user.getRole(),
+                accessToken,
+                refreshToken
         );
+    }
+
+    @Transactional
+    public LoginResponse verifyMfa(com.bankcore360.dto.MfaVerifyRequest request, jakarta.servlet.http.HttpServletRequest httpRequest) {
+        if (mfaService == null) {
+            throw new IllegalStateException("MFA service is not configured");
+        }
+
+        AppUser user = mfaService.verifyMfa(request.getUsername(), request.getMfaTicket(), request.getCode(), request.isRecoveryCode());
+        
+        String accessToken = null;
+        String refreshToken = null;
+        if (tokenRotationService != null) {
+            UserResponse ur = mapToUserResponse(user);
+            com.bankcore360.dto.AuthTokenResponse tokens = tokenRotationService.issueTokenPair(user, ur);
+            accessToken = tokens.getAccessToken();
+            refreshToken = tokens.getRefreshToken();
+        }
+
+        if (sessionManagementService != null && httpRequest != null) {
+            sessionManagementService.registerSession(user, httpRequest);
+        }
+
+        return new LoginResponse(
+                "MFA verified successfully",
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getRole(),
+                accessToken,
+                refreshToken
+        );
+    }
+
+    @Transactional
+    public com.bankcore360.dto.MfaEnrollResponse enrollMfa(String username) {
+        if (mfaService == null) {
+            throw new IllegalStateException("MFA service is not configured");
+        }
+        return mfaService.enrollMfa(username);
+    }
+
+    public com.bankcore360.dto.AuthTokenResponse rotateRefreshToken(com.bankcore360.dto.RefreshTokenRequest request) {
+        if (tokenRotationService == null) {
+            throw new IllegalStateException("Token rotation service is not configured");
+        }
+        return tokenRotationService.rotateRefreshToken(request.getRefreshToken());
+    }
+
+    @Transactional
+    public void logout(com.bankcore360.dto.RefreshTokenRequest request, String username) {
+        if (tokenRotationService != null && request != null && request.getRefreshToken() != null) {
+            tokenRotationService.revokeToken(request.getRefreshToken());
+        }
+        if (sessionManagementService != null && username != null) {
+            appUserRepository.findByUsername(username).ifPresent(u ->
+                sessionManagementService.revokeAllSessions(u.getId())
+            );
+        }
     }
 
     @Transactional

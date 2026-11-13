@@ -1611,4 +1611,127 @@ export async function fetchAccountRiskProfile(accountNumber: string): Promise<an
   return res.json();
 }
 
+// --- Bank Reconciliation APIs ---
+
+export interface BankStatementDto {
+  id: number;
+  statementReference: string;
+  bankName: string;
+  accountNumber: string;
+  filename: string;
+  fileHashSha256: string;
+  statementStartDate?: string;
+  statementEndDate?: string;
+  openingBalance: number;
+  closingBalance: number;
+  totalRecords: number;
+  status: "UPLOADED" | "PROCESSING" | "RECONCILED" | "DISCREPANCIES_FOUND";
+  uploadedBy?: string;
+  uploadedAt: string;
+}
+
+export interface DiscrepancyDto {
+  id: number;
+  statementItemReference?: string;
+  ledgerTxnReference?: string;
+  discrepancyType: "AMOUNT_MISMATCH" | "DATE_OUT_OF_BOUNDS" | "MISSING_IN_LEDGER" | "MISSING_IN_STATEMENT" | "DUPLICATE_ENTRY";
+  description: string;
+  statementAmount?: number;
+  ledgerAmount?: number;
+  variance?: number;
+  status: "OPEN" | "UNDER_INVESTIGATION" | "RESOLVED" | "IGNORED";
+  investigatorNotes?: string;
+  resolvedBy?: string;
+  resolvedAt?: string;
+}
+
+export interface ReconciliationBatchReportDto {
+  batchId: number;
+  batchReference: string;
+  statementReference: string;
+  bankName: string;
+  accountNumber: string;
+  reconciledAt: string;
+  reconciledBy: string;
+  matchedCount: number;
+  unmatchedStatementCount: number;
+  unmatchedLedgerCount: number;
+  discrepancyCount: number;
+  matchRatePercentage: number;
+  status: string;
+  discrepancies: DiscrepancyDto[];
+}
+
+export async function uploadBankStatement(file: File, bankName: string, accountNumber: string): Promise<any> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("bankName", bankName);
+  formData.append("accountNumber", accountNumber);
+
+  const authHeaders = getAuthHeaders() as Record<string, string>;
+  const headers: Record<string, string> = {};
+  if (authHeaders["Authorization"]) headers["Authorization"] = authHeaders["Authorization"];
+
+  const res = await fetch(`${SPRING_BOOT_API}/api/reconciliation/upload`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Failed to upload bank statement");
+  }
+  return res.json();
+}
+
+export async function executeReconciliationBatch(statementId: number): Promise<ReconciliationBatchReportDto> {
+  const res = await fetch(`${SPRING_BOOT_API}/api/reconciliation/batches/${statementId}/execute`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Reconciliation matching execution failed");
+  }
+  return res.json();
+}
+
+export async function fetchBankStatements(): Promise<BankStatementDto[]> {
+  try {
+    const res = await fetch(`${SPRING_BOOT_API}/api/reconciliation/statements`, {
+      headers: getAuthHeaders(),
+    });
+    if (res.ok) return await res.json();
+  } catch {}
+  return [];
+}
+
+export async function fetchDiscrepancies(status?: string, type?: string): Promise<DiscrepancyDto[]> {
+  try {
+    const params = new URLSearchParams();
+    if (status) params.append("status", status);
+    if (type) params.append("type", type);
+    const url = `${SPRING_BOOT_API}/api/reconciliation/discrepancies${params.toString() ? "?" + params.toString() : ""}`;
+    const res = await fetch(url, { headers: getAuthHeaders() });
+    if (res.ok) return await res.json();
+  } catch {}
+  return [];
+}
+
+export async function resolveDiscrepancy(id: number, status: string, notes: string): Promise<DiscrepancyDto> {
+  const res = await fetch(`${SPRING_BOOT_API}/api/reconciliation/discrepancies/${id}/status`, {
+    method: "PATCH",
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ status, notes }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Failed to resolve discrepancy");
+  }
+  return res.json();
+}
+
 

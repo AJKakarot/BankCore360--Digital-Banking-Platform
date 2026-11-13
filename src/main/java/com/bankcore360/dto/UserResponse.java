@@ -24,6 +24,10 @@ public class UserResponse {
         this.createdAt = createdAt;
     }
 
+    public UserResponse(Long id, String username, String email, UserRole role) {
+        this(id, username, email, role, true, LocalDateTime.now());
+    }
+
     public Long getId() {
         return id;
     }

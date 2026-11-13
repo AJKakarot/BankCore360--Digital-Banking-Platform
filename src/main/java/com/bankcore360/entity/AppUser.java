@@ -27,6 +27,18 @@ public class AppUser {
     @Column(nullable = false)
     private boolean enabled = true;
 
+    @Column(name = "mfa_enabled", nullable = false)
+    private boolean mfaEnabled = false;
+
+    @Column(name = "mfa_secret", length = 128)
+    private String mfaSecret;
+
+    @Column(name = "mfa_type", length = 32)
+    private String mfaType = "OTP";
+
+    @Column(name = "mfa_recovery_codes", length = 1024)
+    private String mfaRecoveryCodes;
+
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -92,6 +104,38 @@ public class AppUser {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public boolean isMfaEnabled() {
+        return mfaEnabled;
+    }
+
+    public void setMfaEnabled(boolean mfaEnabled) {
+        this.mfaEnabled = mfaEnabled;
+    }
+
+    public String getMfaSecret() {
+        return mfaSecret;
+    }
+
+    public void setMfaSecret(String mfaSecret) {
+        this.mfaSecret = mfaSecret;
+    }
+
+    public String getMfaType() {
+        return mfaType;
+    }
+
+    public void setMfaType(String mfaType) {
+        this.mfaType = mfaType;
+    }
+
+    public String getMfaRecoveryCodes() {
+        return mfaRecoveryCodes;
+    }
+
+    public void setMfaRecoveryCodes(String mfaRecoveryCodes) {
+        this.mfaRecoveryCodes = mfaRecoveryCodes;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -58,3 +58,4 @@ public class FraudEventConsumer {
         return processedMessageKeys.contains(key);
     }
 }
+
