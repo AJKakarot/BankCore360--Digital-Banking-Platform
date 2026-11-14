@@ -125,3 +125,4 @@ public class MfaAuthenticationTest {
         verify(appUserRepository, times(1)).save(testUser);
     }
 }
+

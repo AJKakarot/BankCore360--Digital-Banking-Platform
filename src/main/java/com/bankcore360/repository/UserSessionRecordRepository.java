@@ -25,3 +25,4 @@ public interface UserSessionRecordRepository extends JpaRepository<UserSessionRe
     @Query("UPDATE UserSessionRecord s SET s.active = false WHERE s.user.id = :userId")
     void revokeAllForUser(@Param("userId") Long userId);
 }
+

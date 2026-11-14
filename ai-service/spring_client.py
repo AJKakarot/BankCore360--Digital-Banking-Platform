@@ -1,7 +1,7 @@
 """
 Service-to-Service REST client connecting AI Service to Spring Boot backend.
-Retrieves live loan application status, document lists, and audit updates
-with customer authorization isolation.
+Retrieves live accounts, double-entry ledger transactions, spending summaries,
+fraud risk metadata, and loan products with strict customer authorization isolation.
 """
 
 import httpx
@@ -16,36 +16,108 @@ class SpringBootClient:
         self.base_url = settings.SPRING_BOOT_URL
         self.service_token = settings.SPRING_BOOT_SERVICE_TOKEN
 
-    async def get_customer_applications(self, customer_username: str) -> List[Dict[str, Any]]:
-        """
-        Fetches the customer's real loan applications from Spring Boot.
-        """
-        if not customer_username:
-            return []
-
-        url = f"{self.base_url}/api/loans/my-applications"
-        # We pass the customer username in headers for authenticated service call
+    def _get_headers(self, customer_username: Optional[str] = None) -> Dict[str, str]:
         headers = {
             "X-Internal-Service-Token": self.service_token,
-            "X-Authenticated-User": customer_username,
             "Accept": "application/json"
         }
+        if customer_username:
+            headers["X-Authenticated-User"] = customer_username
+        return headers
 
+    async def get_customer_accounts(self, customer_username: str) -> List[Dict[str, Any]]:
+        if not customer_username:
+            return []
+        url = f"{self.base_url}/api/internal/customer/accounts"
         try:
-            async with httpx.AsyncClient(timeout=4.0) as client:
-                res = await client.get(url, headers=headers)
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                res = await client.get(url, headers=self._get_headers(customer_username))
+                if res.status_code == 200:
+                    return res.json()
+        except Exception as e:
+            logger.warning(f"Failed to fetch accounts from {url}: {e}")
+        return []
+
+    async def get_customer_spending_summary(self, customer_username: str) -> Optional[Dict[str, Any]]:
+        if not customer_username:
+            return None
+        url = f"{self.base_url}/api/internal/customer/spending-summary"
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                res = await client.get(url, headers=self._get_headers(customer_username))
+                if res.status_code == 200:
+                    return res.json()
+        except Exception as e:
+            logger.warning(f"Failed to fetch spending summary from {url}: {e}")
+        return None
+
+    async def get_customer_transactions(self, customer_username: str) -> List[Dict[str, Any]]:
+        if not customer_username:
+            return []
+        url = f"{self.base_url}/api/internal/customer/transactions"
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                res = await client.get(url, headers=self._get_headers(customer_username))
+                if res.status_code == 200:
+                    return res.json()
+        except Exception as e:
+            logger.warning(f"Failed to fetch transactions from {url}: {e}")
+        return []
+
+    async def get_transaction_detail(self, customer_username: str, ref_or_id: str) -> Optional[Dict[str, Any]]:
+        if not customer_username or not ref_or_id:
+            return None
+        url = f"{self.base_url}/api/internal/customer/transactions/{ref_or_id}"
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                res = await client.get(url, headers=self._get_headers(customer_username))
+                if res.status_code == 200:
+                    return res.json()
+                elif res.status_code == 403:
+                    logger.warning(f"Ownership check failed for transaction {ref_or_id}")
+                    return {"error": "ACCESS_DENIED", "message": f"You do not have authorization to view transaction {ref_or_id}."}
+        except Exception as e:
+            logger.warning(f"Failed to fetch transaction detail from {url}: {e}")
+        return None
+
+    async def get_customer_fraud_metadata(self, customer_username: str) -> Optional[Dict[str, Any]]:
+        if not customer_username:
+            return None
+        url = f"{self.base_url}/api/internal/customer/fraud-metadata"
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                res = await client.get(url, headers=self._get_headers(customer_username))
+                if res.status_code == 200:
+                    return res.json()
+        except Exception as e:
+            logger.warning(f"Failed to fetch fraud metadata from {url}: {e}")
+        return None
+
+    async def get_loan_products(self) -> List[Dict[str, Any]]:
+        url = f"{self.base_url}/api/internal/loans/products"
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                res = await client.get(url, headers=self._get_headers())
+                if res.status_code == 200:
+                    return res.json()
+        except Exception as e:
+            logger.warning(f"Failed to fetch loan products from {url}: {e}")
+        return []
+
+    async def get_customer_applications(self, customer_username: str) -> List[Dict[str, Any]]:
+        if not customer_username:
+            return []
+        url = f"{self.base_url}/api/loans/my-applications"
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                res = await client.get(url, headers=self._get_headers(customer_username))
                 if res.status_code == 200:
                     return res.json()
         except Exception as e:
             logger.warning(f"Could not reach Spring Boot at {url}: {e}")
-
         return []
 
     async def get_application_by_reference(self, reference: str, customer_username: str) -> Optional[Dict[str, Any]]:
-        """
-        Fetches a specific application and enforces ownership:
-        customer can only view their own application.
-        """
         apps = await self.get_customer_applications(customer_username)
         for app in apps:
             if app.get("applicationReference") == reference:
@@ -54,26 +126,16 @@ class SpringBootClient:
 
     async def get_application_documents(self, reference: str, customer_username: str) -> List[Dict[str, Any]]:
         url = f"{self.base_url}/api/loans/{reference}/documents"
-        headers = {
-            "X-Internal-Service-Token": self.service_token,
-            "X-Authenticated-User": customer_username,
-            "Accept": "application/json"
-        }
-
         try:
-            async with httpx.AsyncClient(timeout=4.0) as client:
-                res = await client.get(url, headers=headers)
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                res = await client.get(url, headers=self._get_headers(customer_username))
                 if res.status_code == 200:
                     return res.json()
         except Exception as e:
             logger.warning(f"Could not fetch documents for {reference}: {e}")
-
         return []
 
     async def get_status_summary(self, customer_username: str, reference: Optional[str] = None) -> Dict[str, Any]:
-        """
-        Builds a comprehensive application status report for customer assistant.
-        """
         if not customer_username:
             return {
                 "hasApplications": False,
@@ -87,7 +149,6 @@ class SpringBootClient:
                 "message": f"No loan applications were found for account '{customer_username}'. You can apply online via the Customer Portal."
             }
 
-        # Select target application
         target_app = None
         if reference:
             for a in apps:
@@ -96,7 +157,7 @@ class SpringBootClient:
                     break
 
         if not target_app:
-            target_app = apps[0]  # Most recent application
+            target_app = apps[0]
 
         ref = target_app.get("applicationReference", "UNKNOWN")
         status = target_app.get("status", "UNKNOWN")
@@ -110,32 +171,24 @@ class SpringBootClient:
             for d in docs if d.get("documentStatus") == "REJECTED"
         ]
 
-        # Determine next steps based on real state
         if status == "SUBMITTED":
-            if not docs:
-                next_step = "Upload mandatory PAN, Address Proof, and Income documents in the Customer Portal."
-                explanation = "Your loan application has been submitted, but no supporting documents have been uploaded yet."
-            elif pending_docs:
-                next_step = f"Wait for Bank Checker verification of your pending documents: {', '.join(pending_docs)}."
-                explanation = f"Your application is queued for Checker document inspection."
-            else:
-                next_step = "Application is being reviewed by the credit desk."
-                explanation = "Your documents are in review."
+            next_step = "Upload mandatory PAN, Address Proof, and Income documents in the Customer Portal." if not docs else f"Wait for Checker verification of pending documents: {', '.join(pending_docs)}."
+            explanation = "Your loan application has been submitted and is in initial intake."
         elif status == "UNDER_REVIEW":
-            next_step = "Checker official is actively reviewing your uploaded documents and credit profile."
+            next_step = "Checker official is reviewing your uploaded documents and credit profile."
             explanation = "Your application is currently in Maker-Checker verification."
         elif status == "PENDING_MANAGER_APPROVAL":
-            next_step = "All documents have been verified by Checker! Awaiting Branch Manager final sanction and pricing determination."
-            explanation = "Your application has passed document verification and has reached Manager Approval stage."
+            next_step = "All documents have been verified by Checker! Awaiting Branch Manager final sanction."
+            explanation = "Your application has passed document verification and reached Manager Approval stage."
         elif status == "APPROVED":
-            next_step = "Your loan is approved! Awaiting automated disbursement to your BankCore360 account."
-            explanation = f"Congratulations! Your {loan_type} loan was APPROVED for ₹{target_app.get('approvedAmount', amt):,.2f} at {target_app.get('interestRate', 0)}% p.a."
+            next_step = "Your loan is approved! Awaiting automated disbursement to your account."
+            explanation = f"Congratulations! Your {loan_type} loan was APPROVED for ₹{target_app.get('approvedAmount', amt):,.2f}."
         elif status == "DISBURSED":
-            next_step = "Review your auto-generated monthly EMI amortization schedule in 'My Applications'."
+            next_step = "Review your monthly EMI amortization schedule in 'My Applications'."
             explanation = f"Your loan has been disbursed! Disbursement Reference: {target_app.get('disbursementReference', 'N/A')}."
         elif status == "REJECTED":
             reason = target_app.get("rejectionReason", "Credit policy criteria not met")
-            next_step = "Review the rejection reason and discuss re-application options with your branch officer."
+            next_step = "Review the rejection reason with your branch officer."
             explanation = f"Your loan application was not approved. Official Reason: {reason}."
         else:
             next_step = "Check your customer dashboard for recent notifications."
@@ -154,4 +207,3 @@ class SpringBootClient:
         }
 
 spring_client = SpringBootClient()
-

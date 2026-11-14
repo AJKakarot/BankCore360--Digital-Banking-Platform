@@ -17,3 +17,4 @@ public interface ReconciliationDiscrepancyRepository extends JpaRepository<Recon
 
     List<ReconciliationDiscrepancy> findByDiscrepancyType(DiscrepancyType type);
 }
+

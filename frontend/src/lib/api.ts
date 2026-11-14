@@ -279,6 +279,8 @@ export interface AuditLogItem {
 export interface SourceCitation {
   documentId?: number;
   documentName?: string;
+  documentTitle?: string;
+  filename?: string;
   policyCategory?: string;
   version?: string;
   pageNumber?: number;
@@ -293,11 +295,13 @@ export interface AiChatResponse {
   response?: string;
   answer?: string;
   intent?: string;
+  selectedAgent?: string;
   sources?: SourceCitation[];
   relevantPolicies?: string[];
   suggestedNextSteps?: string[];
   guardrailWarnings?: string[];
   disclaimer?: string;
+  data?: any;
 }
 
 // --- API Methods ---
@@ -717,31 +721,34 @@ function generateClientAiResponse(message: string): AiChatResponse {
   };
 }
 
-export async function askAiAssistant(message: string, category?: string): Promise<AiChatResponse> {
-  // 1. Try Spring Boot Backend first (Port 8080 or Render Cloud API)
-  try {
-    const res = await fetch(`${SPRING_BOOT_API}/api/ai/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, category }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && (data.response || data.answer)) {
-        return data;
-      }
-    }
-  } catch {
-    // Backend offline / starting up, continue to secondary or client RAG
-  }
+export async function askAiAssistant(message: string, category?: string, threadId?: string): Promise<AiChatResponse> {
+  const activeUser = getActiveUser();
+  const customerUsername = activeUser?.username || "";
+  const authHeaders = getAuthHeaders();
 
-  // 2. Try Secondary AI Service if defined
-  if (AI_SERVICE_API && AI_SERVICE_API !== SPRING_BOOT_API) {
+  // 1. Try FastAPI AI Service Multi-Agent Assistant direct or via proxy
+  const endpoints = [
+    `${AI_SERVICE_API}/api/ai/assistant/chat`,
+    `${AI_SERVICE_API}/api/ai/chat`,
+    `${SPRING_BOOT_API}/api/ai/chat`
+  ];
+
+  for (const endpoint of endpoints) {
     try {
-      const res = await fetch(`${AI_SERVICE_API}/api/ai/chat`, {
+      const res = await fetch(endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, category }),
+        headers: {
+          "Content-Type": "application/json",
+          "X-Authenticated-User": customerUsername,
+          ...authHeaders
+        },
+        body: JSON.stringify({
+          message,
+          question: message,
+          category,
+          customerUsername,
+          threadId: threadId || (customerUsername ? `thread_${customerUsername}` : undefined)
+        }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -750,11 +757,11 @@ export async function askAiAssistant(message: string, category?: string): Promis
         }
       }
     } catch {
-      // Continue to client RAG
+      // Try next endpoint
     }
   }
 
-  // 3. Resilient Client-Side Intelligent Banking Knowledge RAG Engine
+  // Fallback to client-side RAG engine
   return generateClientAiResponse(message);
 }
 

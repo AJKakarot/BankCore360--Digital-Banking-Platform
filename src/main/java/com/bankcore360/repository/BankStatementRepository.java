@@ -13,3 +13,4 @@ public interface BankStatementRepository extends JpaRepository<BankStatement, Lo
 
     boolean existsByFileHashSha256(String fileHashSha256);
 }
+

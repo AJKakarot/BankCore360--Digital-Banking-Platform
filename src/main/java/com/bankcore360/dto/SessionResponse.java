@@ -103,3 +103,4 @@ public class SessionResponse {
         this.loginAt = loginAt;
     }
 }
+

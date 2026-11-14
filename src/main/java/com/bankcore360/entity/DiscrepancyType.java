@@ -8,3 +8,4 @@ public enum DiscrepancyType {
     DUPLICATE_ENTRY,
     DIRECTION_MISMATCH
 }
+

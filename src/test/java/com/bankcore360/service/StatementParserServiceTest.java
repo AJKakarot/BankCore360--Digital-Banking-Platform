@@ -92,3 +92,4 @@ public class StatementParserServiceTest {
         assertTrue(ex.getMessage().contains("cannot be empty"));
     }
 }
+

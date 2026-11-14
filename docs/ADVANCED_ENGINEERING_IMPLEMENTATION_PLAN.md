@@ -134,3 +134,4 @@
    - `ObservabilityEndpointTest`: Verification of `/actuator/prometheus`, `X-Correlation-ID` header injection.
 2. Full test run using `./mvnw test`.
 3. Creation of `docs/ADVANCED_ENGINEERING_CHANGELOG.md`.
+

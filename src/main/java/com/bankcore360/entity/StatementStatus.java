@@ -6,3 +6,4 @@ public enum StatementStatus {
     RECONCILED,
     DISCREPANCIES_FOUND
 }
+

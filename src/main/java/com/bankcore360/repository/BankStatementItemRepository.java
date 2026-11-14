@@ -14,3 +14,4 @@ public interface BankStatementItemRepository extends JpaRepository<BankStatement
 
     List<BankStatementItem> findByStatementIdAndReconciliationStatus(Long statementId, ReconciliationItemStatus status);
 }
+

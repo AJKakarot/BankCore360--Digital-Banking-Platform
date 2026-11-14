@@ -39,6 +39,9 @@ class EmbeddingEngine:
     def embed_query(self, text: str) -> List[float]:
         return self._embed_single(text)
 
+    def embed_text(self, text: str) -> List[float]:
+        return self._embed_single(text)
+
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         return [self._embed_single(t) for t in texts]
 

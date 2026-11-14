@@ -60,7 +60,8 @@ public class SecurityConfig {
                                 "/actuator/**",
                                 "/api/auth/**",
                                 "/api/loans/calculator",
-                                "/api/ai/**"
+                                "/api/ai/**",
+                                "/api/internal/**"
                         ).permitAll()
 
                         // Protect all /api/** endpoints with mandatory authentication

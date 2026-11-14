@@ -51,3 +51,4 @@ public class MfaEnrollResponse {
         this.message = message;
     }
 }
+

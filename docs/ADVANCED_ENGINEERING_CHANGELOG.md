@@ -222,3 +222,4 @@ docker-compose up -d
 2. **WebAuthn / Passkeys:** Upgrade MFA from TOTP/OTP to hardware security keys (FIDO2 / WebAuthn).
 3. **Automated MT940 / CAMT.053 Ingestion:** Expand statement parsing to support ISO 20022 and SWIFT banking statement formats.
 4. **Geo-Velocity Anomaly Engine:** Incorporate MaxMind GeoIP lookup into the session management filter to calculate travel velocity between sequential logins.
+

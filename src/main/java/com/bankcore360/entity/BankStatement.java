@@ -205,3 +205,4 @@ public class BankStatement {
         this.items = items;
     }
 }
+

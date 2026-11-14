@@ -14,6 +14,7 @@ except ImportError:
         return decorator
 
 from .graph import run_policy_graph
+from .multi_agent_graph import run_multi_agent_assistant
 from database import memory_vector_store
 from rag_pipeline import rag_pipeline
 from eligibility import evaluate_eligibility
@@ -53,12 +54,13 @@ class ChatRequestDto(BaseModel):
     loanType: Optional[str] = None
     customerUsername: Optional[str] = None
     applicationReference: Optional[str] = None
+    threadId: Optional[str] = None
 
 
 @app.get("/")
 def home():
     return {
-        "message": "BankCore360 Loan Policy Assistant is running!"
+        "message": "BankCore360 Multi-Agent AI Banking Assistant is running!"
     }
 
 
@@ -67,9 +69,15 @@ def home():
 def health_check():
     return {
         "status": "UP",
-        "service": "BankCore360 Loan Policy Assistant",
-        "framework": "LangGraph",
-        "grokModel": "xAI Grok / OpenAI-compatible",
+        "service": "BankCore360 Multi-Agent AI Banking Assistant",
+        "framework": "LangGraph Supervisor",
+        "specialistAgents": [
+            "BankingKnowledgeAgent",
+            "FinancialInsightsAgent",
+            "TransactionExplanationAgent",
+            "FraudExplanationAgent",
+            "LoanAssistantAgent"
+        ],
         "activePolicies": len([d for d in memory_vector_store.documents.values() if d.get("is_active")])
     }
 
@@ -99,44 +107,21 @@ def ask_question(request: QuestionRequest):
 
 
 @app.post("/api/ai/chat")
-@traceable(name="banking-policy-chat")
-def chat_endpoint(request: ChatRequestDto):
+@app.post("/api/ai/assistant/chat")
+@traceable(name="banking-multi-agent-chat")
+async def chat_endpoint(request: ChatRequestDto, x_authenticated_user: Optional[str] = Header(None)):
     raw_query = request.message if request.message is not None else request.question
     if raw_query is None or not raw_query.strip():
         raise HTTPException(status_code=400, detail="Query message cannot be empty")
 
     q = raw_query.strip()
-    result = run_policy_graph(q)
-    answer = result.get("answer", "")
-    sources = result.get("sources", [])
+    customer = x_authenticated_user or request.customerUsername
 
-    return {
-        "response": answer,
-        "answer": answer,
-        "intent": "POLICY_QUERY",
-        "sources": [
-            {
-                "documentId": 1,
-                "documentName": s.get("policy_id", "KYC-001"),
-                "policyCategory": s.get("section", "Policy"),
-                "version": "1.0",
-                "pageNumber": 1,
-                "similarityScore": 0.95,
-                "excerpt": s.get("text", "")[:200]
-            }
-            for s in sources
-        ],
-        "relevantPolicies": [s.get("section", "Policy") for s in sources],
-        "suggestedNextSteps": [
-            "Review cited policy section in the Customer portal",
-            "Contact BankCore360 branch support for underwriting details"
-        ],
-        "guardrailWarnings": [],
-        "disclaimer": (
-            "Educational AI Banking Assistant guidance. "
-            "Final decisions rest solely with authorized human bank Checker and Manager officials."
-        )
-    }
+    return await run_multi_agent_assistant(
+        query=q,
+        customer_username=customer,
+        thread_id=request.threadId
+    )
 
 
 # ====================================================

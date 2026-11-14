@@ -14,3 +14,4 @@ public interface ReconciliationBatchRepository extends JpaRepository<Reconciliat
 
     List<ReconciliationBatch> findByStatementIdOrderByReconciledAtDesc(Long statementId);
 }
+

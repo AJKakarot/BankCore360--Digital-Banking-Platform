@@ -86,3 +86,4 @@ public class AuthTokenResponse {
         this.user = user;
     }
 }
+

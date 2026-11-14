@@ -11,3 +11,4 @@ scrape_configs:
         labels:
           application: 'BankCore360'
           environment: 'production-modular-monolith'
+

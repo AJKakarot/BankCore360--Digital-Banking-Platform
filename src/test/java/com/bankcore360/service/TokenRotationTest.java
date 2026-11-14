@@ -101,3 +101,4 @@ public class TokenRotationTest {
         verify(fintechMetricsService, times(1)).recordTokenReuseDetected("john_doe");
     }
 }
+

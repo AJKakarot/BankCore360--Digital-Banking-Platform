@@ -77,3 +77,4 @@ public class RateLimitingTest {
         verify(fintechMetricsService, times(1)).recordRateLimitThrottled(eq("/api/auth/login"), anyString());
     }
 }
+

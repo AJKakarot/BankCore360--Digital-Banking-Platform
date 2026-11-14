@@ -56,3 +56,4 @@ public class CorrelationIdFilterTest {
         verify(filterChain, times(1)).doFilter(request, response);
     }
 }
+

@@ -153,3 +153,4 @@ public class UserSessionRecord {
         this.loginAt = loginAt;
     }
 }
+

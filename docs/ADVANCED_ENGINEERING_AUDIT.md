@@ -41,3 +41,4 @@ This comprehensive audit evaluates the BankCore360 platform across three enterpr
    - Token reuse detection must trigger immediate invalidation of the entire token hierarchy for that session.
 3. **Observability Invariants:**
    - Sensitive financial data (PAN, CVV, passwords, full account numbers) must NEVER be exposed in log messages, Prometheus metric tags, or trace attributes.
+
