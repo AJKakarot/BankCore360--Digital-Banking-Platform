@@ -4,8 +4,8 @@
  * and FastAPI AI Service (Port 8000).
  */
 
-export const SPRING_BOOT_API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-export const AI_SERVICE_API = process.env.NEXT_PUBLIC_AI_URL || "http://localhost:8000";
+export const SPRING_BOOT_API = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080").replace(/\/+$/, "");
+export const AI_SERVICE_API = (process.env.NEXT_PUBLIC_AI_URL || "http://localhost:8000").replace(/\/+$/, "");
 
 export type RoleType = "CUSTOMER" | "CHECKER" | "MANAGER" | "ADMIN";
 

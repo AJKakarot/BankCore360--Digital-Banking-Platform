@@ -94,3 +94,4 @@ All remaining enterprise capabilities have been fully implemented, integrated, a
 | `src/test/java/com/bankcore360/service/LedgerRollbackIntegrationTest.java` | Ledger rollback invariant tests | Created |
 | `src/test/java/com/bankcore360/migration/FlywayMigrationValidationTest.java` | Flyway SQL script validation tests | Created |
 | `src/test/java/com/bankcore360/integration/ContainerizedInfrastructureTest.java` | Testcontainers integration tests | Created |
+

@@ -50,3 +50,4 @@ groups:
         annotations:
           summary: "JVM Heap Memory utilization exceeds 90%"
           description: "JVM Heap memory usage is critical at {{ $value | humanizePercentage }}."
+

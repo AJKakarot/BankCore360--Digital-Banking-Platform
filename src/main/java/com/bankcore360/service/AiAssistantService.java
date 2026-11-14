@@ -22,7 +22,13 @@ public class AiAssistantService {
 
     public AiAssistantService(@Value("${AI_SERVICE_URL:http://localhost:8000}") String aiServiceUrl) {
         this.aiServiceUrl = aiServiceUrl;
-        this.restClient = RestClient.builder().baseUrl(aiServiceUrl).build();
+        org.springframework.http.client.SimpleClientHttpRequestFactory requestFactory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(5000); // 5s fail-fast during Render cold start
+        requestFactory.setReadTimeout(12000);  // 12s read timeout
+        this.restClient = RestClient.builder()
+                .requestFactory(requestFactory)
+                .baseUrl(aiServiceUrl)
+                .build();
     }
 
     public AiChatResponse chat(AiChatRequest request) {

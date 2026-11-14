@@ -70,3 +70,4 @@ class AuditLogRetentionServiceTest {
         verify(userSessionRepository, times(1)).deleteInactiveSessionsOlderThan(any(LocalDateTime.class));
     }
 }
+

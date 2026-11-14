@@ -38,3 +38,4 @@ CREATE TRIGGER trg_transaction_reversals_immutable
 BEFORE UPDATE OR DELETE ON transaction_reversals
 FOR EACH ROW
 EXECUTE FUNCTION prevent_transaction_reversal_mutation();
+

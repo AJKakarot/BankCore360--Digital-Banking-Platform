@@ -67,3 +67,4 @@ class JwtTokenProviderTest {
         assertThat(jwtTokenProvider.extractRole(token)).isEqualTo("MANAGER");
     }
 }
+

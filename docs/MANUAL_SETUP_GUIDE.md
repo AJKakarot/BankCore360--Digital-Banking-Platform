@@ -124,3 +124,4 @@ Configure the following secrets in GitHub Repository Settings (`Settings -> Secr
 | `OPENAI_API_KEY` | Model testing key | `sk-...` |
 | `LANGSMITH_API_KEY` | Multi-agent tracing token | `lsv2_...` |
 | `INTERNAL_API_SECRET` | AI gateway authentication secret | `hex-string` |
+

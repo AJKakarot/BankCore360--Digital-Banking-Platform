@@ -533,3 +533,4 @@ CREATE TABLE IF NOT EXISTS processed_events (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_processed_event_group ON processed_events(event_id, consumer_group);
+
