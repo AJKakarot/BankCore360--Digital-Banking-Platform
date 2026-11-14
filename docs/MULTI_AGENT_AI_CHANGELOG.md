@@ -162,3 +162,4 @@
 5. Navigate to `http://localhost:3000/customer/ai-assistant`:
    - Switch between the 5 Quick Action Tabs.
    - Click suggested question chips to verify intent classification and specialist agent routing.
+

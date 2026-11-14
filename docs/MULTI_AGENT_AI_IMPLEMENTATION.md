@@ -130,3 +130,4 @@
   - Agent identification badges indicating which specialist responded.
   - Verified audit citations and clickable recommended next steps.
   - Conversation thread reset button.
+

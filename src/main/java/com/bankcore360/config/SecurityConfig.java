@@ -38,13 +38,21 @@ public class SecurityConfig {
      * and CSRF configuration.
      */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            @org.springframework.beans.factory.annotation.Autowired(required = false)
+            com.bankcore360.security.JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .httpBasic(Customizer.withDefaults())
-                .authorizeHttpRequests(auth -> auth
+                .httpBasic(Customizer.withDefaults());
+
+        if (jwtAuthenticationFilter != null) {
+            http.addFilterBefore(jwtAuthenticationFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+        }
+
+        http.authorizeHttpRequests(auth -> auth
                         // Public endpoints: Swagger/OpenAPI docs, public authentication APIs, static UI resources, and educational helpers
                         .requestMatchers(
                                 "/",

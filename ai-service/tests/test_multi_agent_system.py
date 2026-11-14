@@ -232,3 +232,4 @@ async def test_end_to_end_supervisor_graph():
     assert res["intent"] == "BANKING_KNOWLEDGE"
     assert len(res["answer"]) > 20
     assert "Educational AI Banking Assistant guidance" in res["disclaimer"]
+

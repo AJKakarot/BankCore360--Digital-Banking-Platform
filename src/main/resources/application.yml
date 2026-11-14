@@ -2,6 +2,19 @@ spring:
   application:
     name: BankCore360
 
+  # Java 21 Virtual Threads - native lightweight concurrency
+  threads:
+    virtual:
+      enabled: true
+
+  # Flyway version-controlled database migrations
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration
+    validate-on-migrate: true
+
   # DataSource configuration - Defaults to Neon PostgreSQL Cloud DB
   # Can be overridden via environment variables (DB_URL, DB_USERNAME, DB_PASSWORD)
   datasource:
@@ -10,17 +23,19 @@ spring:
     password: ${DB_PASSWORD:npg_0IFZmYOw1iqM}
     driver-class-name: org.postgresql.Driver
     hikari:
+      pool-name: BankCore360HikariPool
       connection-timeout: ${DB_CONNECTION_TIMEOUT:30000}
-      maximum-pool-size: ${DB_MAX_POOL_SIZE:5}
-      minimum-idle: ${DB_MIN_IDLE:1}
+      maximum-pool-size: ${DB_MAX_POOL_SIZE:20}
+      minimum-idle: ${DB_MIN_IDLE:5}
       idle-timeout: 600000
       max-lifetime: 1800000
+      leak-detection-threshold: 60000
 
   # JPA & Hibernate configuration
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: ${JPA_DDL_AUTO:update}
+      ddl-auto: ${JPA_DDL_AUTO:validate}
     show-sql: ${SHOW_SQL:false}
     properties:
       hibernate:

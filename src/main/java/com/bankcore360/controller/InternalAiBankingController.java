@@ -112,3 +112,4 @@ public class InternalAiBankingController {
         return ResponseEntity.ok(products);
     }
 }
+

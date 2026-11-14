@@ -75,3 +75,4 @@ public class InternalCustomerFraudMetadataDto {
     public List<FraudAssessmentSummaryDto> getRecentAssessments() { return recentAssessments; }
     public void setRecentAssessments(List<FraudAssessmentSummaryDto> recentAssessments) { this.recentAssessments = recentAssessments; }
 }
+

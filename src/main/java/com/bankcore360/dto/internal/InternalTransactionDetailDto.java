@@ -74,3 +74,4 @@ public class InternalTransactionDetailDto {
     public List<String> getCounterpartyDetails() { return counterpartyDetails; }
     public void setCounterpartyDetails(List<String> counterpartyDetails) { this.counterpartyDetails = counterpartyDetails; }
 }
+

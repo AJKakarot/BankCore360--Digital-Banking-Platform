@@ -132,3 +132,4 @@ class LoanAssistantAgent:
         }
 
 loan_assistant_agent = LoanAssistantAgent()
+

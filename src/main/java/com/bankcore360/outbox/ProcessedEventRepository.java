@@ -15,5 +15,9 @@ public interface ProcessedEventRepository extends JpaRepository<ProcessedEvent, 
     Optional<ProcessedEvent> findByEventIdAndConsumerGroup(String eventId, String consumerGroup);
 
     List<ProcessedEvent> findAllByOrderByProcessedAtDesc(Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("DELETE FROM ProcessedEvent p WHERE p.processedAt < :cutoff")
+    int deleteEventsOlderThan(@org.springframework.data.repository.query.Param("cutoff") java.time.LocalDateTime cutoff);
 }
 

@@ -113,3 +113,4 @@ class FinancialInsightsAgent:
         }
 
 financial_insights_agent = FinancialInsightsAgent()
+

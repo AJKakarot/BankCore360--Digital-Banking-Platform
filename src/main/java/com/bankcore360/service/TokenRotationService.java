@@ -33,12 +33,21 @@ public class TokenRotationService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final FintechMetricsService fintechMetricsService;
+    private final com.bankcore360.security.JwtTokenProvider jwtTokenProvider;
 
     public TokenRotationService(RefreshTokenRepository refreshTokenRepository,
                                 @org.springframework.beans.factory.annotation.Autowired(required = false)
-                                FintechMetricsService fintechMetricsService) {
+                                FintechMetricsService fintechMetricsService,
+                                @org.springframework.beans.factory.annotation.Autowired(required = false)
+                                com.bankcore360.security.JwtTokenProvider jwtTokenProvider) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.fintechMetricsService = fintechMetricsService;
+        this.jwtTokenProvider = jwtTokenProvider;
+    }
+
+    public TokenRotationService(RefreshTokenRepository refreshTokenRepository,
+                                FintechMetricsService fintechMetricsService) {
+        this(refreshTokenRepository, fintechMetricsService, null);
     }
 
     /**
@@ -140,8 +149,11 @@ public class TokenRotationService {
     }
 
     public String generateAccessToken(AppUser user) {
-        // Generates an authenticated bearer session token
-        return "AT-" + user.getUsername() + "-" + UUID.randomUUID().toString().replace("-", "").toUpperCase();
+        if (jwtTokenProvider != null && user != null) {
+            return jwtTokenProvider.generateAccessToken(user);
+        }
+        // Fallback bearer session token
+        return "AT-" + (user != null ? user.getUsername() : "UNKNOWN") + "-" + UUID.randomUUID().toString().replace("-", "").toUpperCase();
     }
 
     public static String generateSecureToken() {

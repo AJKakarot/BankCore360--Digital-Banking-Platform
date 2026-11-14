@@ -24,5 +24,9 @@ public interface UserSessionRecordRepository extends JpaRepository<UserSessionRe
     @Modifying
     @Query("UPDATE UserSessionRecord s SET s.active = false WHERE s.user.id = :userId")
     void revokeAllForUser(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("DELETE FROM UserSessionRecord s WHERE s.active = false AND s.lastActivityAt < :cutoff")
+    int deleteInactiveSessionsOlderThan(@Param("cutoff") java.time.LocalDateTime cutoff);
 }
 

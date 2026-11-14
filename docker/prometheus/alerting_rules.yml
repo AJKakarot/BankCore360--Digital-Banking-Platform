@@ -1,0 +1,52 @@
+groups:
+  - name: bankcore360_alerts
+    rules:
+      - alert: DatabaseConnectionPoolExhaustion
+        expr: (hikaricp_connections_active{pool="BankCore360HikariPool"} / hikaricp_connections_max{pool="BankCore360HikariPool"}) > 0.85
+        for: 1m
+        labels:
+          severity: critical
+          tier: database
+        annotations:
+          summary: "HikariCP database pool active connections exceed 85% capacity"
+          description: "Database pool {{ $labels.pool }} is experiencing high connection contention: active connections {{ $value }}."
+
+      - alert: HighOutboxBacklog
+        expr: bankcore360_outbox_pending_events > 100
+        for: 2m
+        labels:
+          severity: warning
+          tier: event-streaming
+        annotations:
+          summary: "Transactional Outbox event publisher backlog is accumulating"
+          description: "There are currently {{ $value }} unpublished events pending dispatch to Kafka."
+
+      - alert: HighFraudAssessmentDeclineRate
+        expr: rate(bankcore360_fraud_assessments_total{decision="DECLINED"}[5m]) > 5
+        for: 1m
+        labels:
+          severity: critical
+          tier: fraud-engine
+        annotations:
+          summary: "Abnormal surge in transaction fraud declines detected"
+          description: "Fraud engine declined rate is {{ $value }} declines/sec over the last 5 minutes."
+
+      - alert: HighHttp5xxServerErrorRate
+        expr: rate(http_server_requests_seconds_count{status=~"5.."}[5m]) > 2
+        for: 2m
+        labels:
+          severity: critical
+          tier: backend-api
+        annotations:
+          summary: "High 5xx HTTP response rate on BankCore360 core service"
+          description: "Backend HTTP 5xx error rate is {{ $value }} errors/sec."
+
+      - alert: JvmMemoryPressure
+        expr: (jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"}) > 0.90
+        for: 2m
+        labels:
+          severity: warning
+          tier: jvm
+        annotations:
+          summary: "JVM Heap Memory utilization exceeds 90%"
+          description: "JVM Heap memory usage is critical at {{ $value | humanizePercentage }}."

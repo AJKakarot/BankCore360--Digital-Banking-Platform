@@ -52,3 +52,4 @@ public class InternalSpendingSummaryDto {
     public String getMonthOverMonthComparison() { return monthOverMonthComparison; }
     public void setMonthOverMonthComparison(String monthOverMonthComparison) { this.monthOverMonthComparison = monthOverMonthComparison; }
 }
+

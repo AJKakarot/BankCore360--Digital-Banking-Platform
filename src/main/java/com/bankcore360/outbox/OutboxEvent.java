@@ -8,10 +8,10 @@ import java.time.LocalDateTime;
  * Stores business events in the same database transaction as the business entity changes.
  */
 @Entity
-@Table(name = "outbox_events", indexes = {
-        @Index(name = "idx_outbox_status_created", columnList = "status, createdAt"),
-        @Index(name = "idx_outbox_event_id", columnList = "eventId", unique = true),
-        @Index(name = "idx_outbox_aggregate", columnList = "aggregateId")
+@Table(name = "event_outbox_records", indexes = {
+        @Index(name = "idx_event_outbox_status_created", columnList = "status, createdAt"),
+        @Index(name = "idx_event_outbox_event_id", columnList = "eventId", unique = true),
+        @Index(name = "idx_event_outbox_aggregate", columnList = "aggregateId")
 })
 public class OutboxEvent {
 

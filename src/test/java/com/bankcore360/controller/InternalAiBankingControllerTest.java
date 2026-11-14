@@ -123,3 +123,4 @@ class InternalAiBankingControllerTest {
                 .andExpect(jsonPath("$[0].baseInterestRate").value(11.50));
     }
 }
+

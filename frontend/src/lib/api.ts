@@ -14,6 +14,8 @@ export interface UserSession {
   role: RoleType;
   email: string;
   token?: string;
+  accessToken?: string;
+  refreshToken?: string;
   password?: string;
 }
 
@@ -48,12 +50,118 @@ export function getSavedSession(): UserSession | null {
   return getActiveUser();
 }
 
+// Refresh token concurrency queue to avoid race conditions
+let isRefreshing = false;
+let refreshSubscribers: ((newToken: string) => void)[] = [];
+
+function onTokenRefreshed(newToken: string) {
+  refreshSubscribers.forEach((cb) => cb(newToken));
+  refreshSubscribers = [];
+}
+
+function addRefreshSubscriber(cb: (newToken: string) => void) {
+  refreshSubscribers.push(cb);
+}
+
+/**
+ * Rotates the refresh token and updates the active user session.
+ */
+export async function refreshSessionToken(): Promise<string | null> {
+  const session = getActiveUser();
+  if (!session || !session.refreshToken) {
+    return null;
+  }
+
+  try {
+    const res = await fetch(`${SPRING_BOOT_API}/api/auth/refresh`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({ refreshToken: session.refreshToken }),
+    });
+
+    if (!res.ok) {
+      clearSession();
+      return null;
+    }
+
+    const data = await res.json();
+    const newAccessToken = data.accessToken || data.token;
+    if (newAccessToken) {
+      session.accessToken = newAccessToken;
+      session.token = newAccessToken;
+      if (data.refreshToken) {
+        session.refreshToken = data.refreshToken;
+      }
+      saveSession(session);
+      return newAccessToken;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Authenticated fetch interceptor with automated 401 token rotation.
+ */
+export async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
+  let headers = new Headers(options.headers || {});
+  const session = getActiveUser();
+
+  if (!headers.has("Authorization")) {
+    const token = session?.accessToken || session?.token;
+    if (token) {
+      headers.set("Authorization", token.startsWith("Bearer ") ? token : `Bearer ${token}`);
+    } else if (session?.username && session?.password) {
+      const credentials = btoa(`${session.username}:${session.password}`);
+      headers.set("Authorization", `Basic ${credentials}`);
+    }
+  }
+
+  let response = await fetch(url, { ...options, headers });
+
+  if (response.status === 401 && session?.refreshToken) {
+    if (!isRefreshing) {
+      isRefreshing = true;
+      const newToken = await refreshSessionToken();
+      isRefreshing = false;
+
+      if (newToken) {
+        onTokenRefreshed(newToken);
+        headers.set("Authorization", newToken.startsWith("Bearer ") ? newToken : `Bearer ${newToken}`);
+        return fetch(url, { ...options, headers });
+      }
+    } else {
+      return new Promise<Response>((resolve) => {
+        addRefreshSubscriber((newToken) => {
+          headers.set("Authorization", newToken.startsWith("Bearer ") ? newToken : `Bearer ${newToken}`);
+          resolve(fetch(url, { ...options, headers }));
+        });
+      });
+    }
+  }
+
+  return response;
+}
+
 export function getAuthHeaders(): HeadersInit {
   const session = getActiveUser();
   if (!session || !session.username) {
     return {
       "Content-Type": "application/json",
       "Accept": "application/json",
+    };
+  }
+
+  const token = session.accessToken || session.token;
+  if (token) {
+    return {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "Authorization": token.startsWith("Bearer ") ? token : `Bearer ${token}`,
     };
   }
 
@@ -109,6 +217,9 @@ export async function loginUser(username: string, password: string): Promise<Use
     role: (data.role as RoleType) || "CUSTOMER",
     email: data.email || `${cleanUsername}@bankcore360.com`,
     password: cleanPassword, // Stored to authenticate subsequent API calls with HTTP Basic
+    accessToken: data.accessToken,
+    token: data.accessToken,
+    refreshToken: data.refreshToken,
   };
 
   saveSession(session);
